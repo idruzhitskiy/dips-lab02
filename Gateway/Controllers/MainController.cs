@@ -80,7 +80,7 @@ namespace Gateway.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            await accountsService.RemoveClaim(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            await accountsService.RemoveClaim(User.FindFirstValue(ClaimTypes.Name));
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Ok();
         }
@@ -88,7 +88,7 @@ namespace Gateway.Controllers
         [HttpGet("name")]
         public async Task<string> GetName()
         {
-            return await accountsService.GetNameByClaim(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            return await accountsService.GetNameByClaim(User.FindFirstValue(ClaimTypes.Name));
         }
 
         [HttpGet("news")]
@@ -136,11 +136,12 @@ namespace Gateway.Controllers
 
         private async Task<string> Authorize()
         {
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>
+            ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>
                 {
                     new Claim(ClaimsIdentity.DefaultNameClaimType, Guid.NewGuid().ToString())
-                }, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType)));
-            return User.FindFirstValue(ClaimTypes.NameIdentifier);
+                }, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+            return identity.Name;
         }
     }
 }

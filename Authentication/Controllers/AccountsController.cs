@@ -62,6 +62,7 @@ namespace Authentication.Controllers
             {
                 user.AddClaim(claim);
                 db.Users.Update(user);
+                db.SaveChanges();
                 return Ok();
             }
             return BadRequest("User not found");
@@ -82,6 +83,7 @@ namespace Authentication.Controllers
             {
                 user.RemoveClaim(claim);
                 db.Users.Update(user);
+                db.SaveChanges();
                 return Ok();
             }
             return BadRequest("User not found");

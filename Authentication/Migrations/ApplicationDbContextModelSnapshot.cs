@@ -31,6 +31,8 @@ namespace Authentication.Migrations
 
                     b.Property<string>("Password");
 
+                    b.Property<string>("StringClaims");
+
                     b.HasKey("Id");
 
                     b.ToTable("Users");

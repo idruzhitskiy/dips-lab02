@@ -21,22 +21,24 @@ namespace Authentication.Entities
         public string Name { get; set; }
         public string Password { get; set; }
         public string Email { get; set; }
-        private string stringClaims = string.Empty;
+        public string StringClaims { get; set; }
 
         public void AddClaim(string claim)
         {
-            stringClaims = $"{stringClaims}{claim};";
+            StringClaims = $"{StringClaims}{claim};";
         }
 
         public void RemoveClaim(string claim)
         {
             if (ContainsClaim(claim))
-                stringClaims = stringClaims.Remove(stringClaims.IndexOf(claim), claim.Length + 1);
+                StringClaims = StringClaims.Remove(StringClaims.IndexOf(claim), claim.Length + 1);
         }
 
         public bool ContainsClaim(string claim)
         {
-            return stringClaims.IndexOf(claim) >= 0;
+            return !string.IsNullOrWhiteSpace(claim) &&
+                !string.IsNullOrWhiteSpace(StringClaims) &&
+                StringClaims.IndexOf(claim) >= 0;
         }
     }
 }
