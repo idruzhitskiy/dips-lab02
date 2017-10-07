@@ -5,24 +5,30 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
 using Microsoft.Extensions.Configuration;
-using Authentication.Models;
 using Newtonsoft.Json;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
+using Gateway.Models;
+using Gateway.Services;
 
 namespace Gateway.Controllers
 {
     [Route("")]
     public class MainController : Controller
     {
-        private string AuthAddress;
+        private AccountsService accountsService;
+        private SubscriptionsService subscriptionsService;
+        private NewsService newsService;
 
         public MainController(IConfiguration configuration)
         {
-            AuthAddress = configuration.GetSection("Addresses")["Auth"];
+            var addresses = configuration.GetSection("Addresses");
+            accountsService = new AccountsService(addresses["Accs"]);
+            subscriptionsService = new SubscriptionsService(addresses["Subscriptions"]);
+            newsService = new NewsService(addresses["News"]);
         }
 
         // GET api/values
@@ -43,19 +49,14 @@ namespace Gateway.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromForm] string name, [FromForm] string pswd)
+        public async Task<IActionResult> Login(LoginModel loginModel)
         {
-            HttpResponseMessage response = new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
-            using (var client = new HttpClient())
-            {
-                response = await client.PostAsync($"{AuthAddress}/login",
-                    new StringContent(JsonConvert.SerializeObject(
-                        new LoginModel { Username = name, Password = pswd }
-                    ), Encoding.UTF8, "application/json"));
-            }
+            var response = await accountsService.Login(loginModel);
+
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                return await Authorize();
+                await accountsService.AddClaim(loginModel.Username, await Authorize());
+                return Ok();
             }
             return Unauthorized();
         }
@@ -63,20 +64,14 @@ namespace Gateway.Controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register([FromForm] string name, [FromForm] string pswd)
+        public async Task<IActionResult> Register(UserModel userModel)
         {
-            HttpResponseMessage response = new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
-            using (var client = new HttpClient())
-            {
-                response = await client.PostAsync($"{AuthAddress}/register",
-                    new StringContent(JsonConvert.SerializeObject(
-                        new UserModel { Username = name, Password = pswd }
-                    ), Encoding.UTF8, "application/json"));
-            }
+            var response = await accountsService.Register(userModel);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                return await Authorize();
+                await accountsService.AddClaim(userModel.Username, await Authorize());
+                return Ok();
             }
             return BadRequest(await response.Content.ReadAsStringAsync());
         }
@@ -85,45 +80,67 @@ namespace Gateway.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
+            await accountsService.RemoveClaim(User.FindFirstValue(ClaimTypes.NameIdentifier));
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Ok();
+        }
+
+        [HttpGet("name")]
+        public async Task<string> GetName()
+        {
+            return await accountsService.GetNameByClaim(User.FindFirstValue(ClaimTypes.NameIdentifier));
         }
 
         [HttpGet("news")]
         [Authorize]
         public async Task<List<string>> GetNews() // TODO: string -> news
         {
-            return new List<string>();
+            var name = await GetName();
+            return await newsService.GetNewsForUser(name);
         }
 
         [HttpPost]
         [Route("news")]
-        public async Task<IActionResult> AddNews([FromBody] string text)
+        public async Task<IActionResult> AddNews(NewsModel news)
         {
-            return Ok();
+            var response = await newsService.AddNews(news);
+            if (response.IsSuccessStatusCode)
+                return Ok();
+            else
+                return BadRequest(await response.Content.ReadAsStringAsync());
         }
 
         [HttpGet]
-        [Route("subscribe")]
-        public async Task<IActionResult> AddSubscription([FromQuery] string user)
+        [Route("subscribe/{author}")]
+        public async Task<IActionResult> AddSubscription(string author)
         {
-            return Ok();
+            var subscriber = await GetName();
+            var response = await subscriptionsService.AddSubscription(subscriber, author);
+            if(response.IsSuccessStatusCode)
+                return Ok();
+            else
+                return BadRequest(await response.Content.ReadAsStringAsync());
         }
 
         [HttpDelete]
-        [Route("subscribe")]
-        public async Task<IActionResult> RemoveSubscription([FromQuery] string user)
+        [Route("subscribe/{author}")]
+        public async Task<IActionResult> RemoveSubscription(string author)
         {
-            return Ok();
+            var subscriber = await GetName();
+            var response = await subscriptionsService.RemoveSubscription(subscriber, author);
+            if (response.IsSuccessStatusCode)
+                return Ok();
+            else
+                return BadRequest(await response.Content.ReadAsStringAsync());
         }
 
-        private async Task<IActionResult> Authorize()
+        private async Task<string> Authorize()
         {
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>
                 {
                     new Claim(ClaimsIdentity.DefaultNameClaimType, Guid.NewGuid().ToString())
                 }, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType)));
-            return Ok();
+            return User.FindFirstValue(ClaimTypes.NameIdentifier);
         }
     }
 }

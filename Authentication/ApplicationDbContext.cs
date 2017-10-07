@@ -1,4 +1,4 @@
-﻿using Authentication.Models;
+﻿using Authentication.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -15,24 +15,10 @@ namespace Authentication
     {
         public DbSet<User> Users { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> ops) : base(ops) { }
-    }
 
-    public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
-    {
-        public ApplicationDbContext CreateDbContext(string[] args)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .Build();
-
-            var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
-
-            var connectionString = configuration.GetConnectionString("AuthConnection");
-
-            builder.UseSqlServer(connectionString);
-
-            return new ApplicationDbContext(builder.Options);
+            modelBuilder.Entity<User>().ToTable("Users");
         }
     }
 }

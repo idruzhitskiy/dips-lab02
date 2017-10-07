@@ -8,12 +8,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 
-namespace Gateway
+namespace NewsStorage
 {
     public class Startup
     {
@@ -28,10 +25,13 @@ namespace Gateway
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(); 
+
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("NewsConnection")));
+
+            services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
-        
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
@@ -39,8 +39,6 @@ namespace Gateway
             {
                 app.UseDeveloperExceptionPage();
             }
-
-            app.UseAuthentication();
 
             app.UseMvc();
         }

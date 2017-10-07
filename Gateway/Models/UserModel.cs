@@ -4,12 +4,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Authentication.Models
+namespace Gateway.Models
 {
     public class UserModel
     {
         public string Username { get; set; }
-
         public string Password { get; set; }
+        public string Email { get; internal set; }
     }
 }

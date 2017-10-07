@@ -9,11 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
-using Authentication.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Authentication
 {
@@ -34,15 +34,7 @@ namespace Authentication
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("AuthConnection")));
 
-            services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(ops =>
-            {
-                ops.Cookie = new Microsoft.AspNetCore.Http.CookieBuilder
-                {
-                    Name = "DIPSLab02",
-                    SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None,
-                    HttpOnly = true
-                };
-            });
+            services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,7 +45,6 @@ namespace Authentication
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseAuthentication();
             app.UseMvc();
         }
     }
