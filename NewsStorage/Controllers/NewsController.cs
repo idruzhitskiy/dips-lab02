@@ -24,7 +24,7 @@ namespace NewsStorage.Controllers
         }
 
         [HttpGet("{name}")]
-        public async Task<List<string>> GetNewsForUser(string name)
+        public async Task<List<string>> GetNewsForUser([FromRoute]string name)
         {
             var authors = await subscriptions.GetSubscribedAuthorsForName(name);
             var news = db.News.Where(n => authors.Contains(n.Author));
@@ -39,9 +39,11 @@ namespace NewsStorage.Controllers
         {
             var news = new News(newsModel);
             news.Date = DateTime.Now;
-            var result = await db.News.AddAsync(news);
-            if (result.State == EntityState.Added)
+            if ((await db.News.AddAsync(news)).State == EntityState.Added)
+            {
+                db.SaveChanges();
                 return Ok();
+            }
             else
                 return BadRequest();
         }

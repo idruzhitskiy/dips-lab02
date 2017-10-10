@@ -14,7 +14,16 @@ namespace Gateway.Services
 
         public async Task<List<string>> GetNewsForUser(string name)
         {
-            return JsonConvert.DeserializeObject<List<string>>(await (await Get($"{name}")).Content.ReadAsStringAsync());
+            HttpResponseMessage httpResponseMessage = await Get($"{name.ToLowerInvariant()}");
+            string response = await httpResponseMessage.Content.ReadAsStringAsync();
+            try
+            {
+                return JsonConvert.DeserializeObject<List<string>>(response);
+            }
+            catch
+            {
+                return new List<string>();
+            }
         }
 
         public async Task<HttpResponseMessage> AddNews(NewsModel newsModel)

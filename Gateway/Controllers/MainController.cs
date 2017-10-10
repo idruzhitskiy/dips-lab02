@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Gateway.Models;
 using Gateway.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Gateway.Controllers
 {
@@ -22,13 +23,16 @@ namespace Gateway.Controllers
         private AccountsService accountsService;
         private SubscriptionsService subscriptionsService;
         private NewsService newsService;
+        private ILogger<MainController> logger;
 
-        public MainController(IConfiguration configuration)
+        public MainController(IConfiguration configuration, ILogger<MainController> logger)
         {
+            this.logger = logger;
             var addresses = configuration.GetSection("Addresses");
             accountsService = new AccountsService(addresses["Accs"]);
             subscriptionsService = new SubscriptionsService(addresses["Subscriptions"]);
             newsService = new NewsService(addresses["News"]);
+            logger.LogInformation("Controller init successful");
         }
 
         // GET api/values
@@ -52,12 +56,16 @@ namespace Gateway.Controllers
         public async Task<IActionResult> Login(LoginModel loginModel)
         {
             var response = await accountsService.Login(loginModel);
+            logger.LogInformation($"Response from accounts service: {response.StatusCode}");
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                await accountsService.AddClaim(loginModel.Username, await Authorize());
+                logger.LogInformation("Adding claim");
+                response = await accountsService.AddClaim(loginModel.Username, await Authorize());
+                logger.LogInformation($"Adding claim response: {response.StatusCode}");
                 return Ok();
             }
+            logger.LogWarning($"User {loginModel.Username} not authorized");
             return Unauthorized();
         }
 
@@ -67,12 +75,16 @@ namespace Gateway.Controllers
         public async Task<IActionResult> Register(UserModel userModel)
         {
             var response = await accountsService.Register(userModel);
+            logger.LogInformation($"Response from accounts service: {response.StatusCode}");
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                await accountsService.AddClaim(userModel.Username, await Authorize());
+                logger.LogInformation("Adding claim");
+                response = await accountsService.AddClaim(userModel.Username, await Authorize());
+                logger.LogInformation($"Adding claim response: {response.StatusCode}");
                 return Ok();
             }
+            logger.LogError($"User {userModel.Username} not registered, error content: {await response.Content.ReadAsStringAsync()}");
             return BadRequest(await response.Content.ReadAsStringAsync());
         }
 
@@ -80,30 +92,29 @@ namespace Gateway.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            await accountsService.RemoveClaim(User.FindFirstValue(ClaimTypes.Name));
+            var response = await accountsService.RemoveClaim(await GetCurrentUsername());
+            logger.LogInformation($"Attempt to remove claim from users database, result: {response.StatusCode}");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Ok();
-        }
-
-        [HttpGet("name")]
-        public async Task<string> GetName()
-        {
-            return await accountsService.GetNameByClaim(User.FindFirstValue(ClaimTypes.Name));
         }
 
         [HttpGet("news")]
         [Authorize]
         public async Task<List<string>> GetNews() // TODO: string -> news
         {
-            var name = await GetName();
-            return await newsService.GetNewsForUser(name);
+            var name = await GetCurrentUsername();
+            List<string> response = await newsService.GetNewsForUser(name);
+            logger.LogInformation($"Number of news for user {name}: {response.Count}");
+            return response;
         }
 
         [HttpPost]
         [Route("news")]
         public async Task<IActionResult> AddNews(NewsModel news)
         {
+            news.Author = await GetCurrentUsername();
             var response = await newsService.AddNews(news);
+            logger.LogInformation($"Attempt to add news, response {response.StatusCode}");
             if (response.IsSuccessStatusCode)
                 return Ok();
             else
@@ -114,9 +125,11 @@ namespace Gateway.Controllers
         [Route("subscribe/{author}")]
         public async Task<IActionResult> AddSubscription(string author)
         {
-            var subscriber = await GetName();
+            var subscriber = await GetCurrentUsername();
             var response = await subscriptionsService.AddSubscription(subscriber, author);
-            if(response.IsSuccessStatusCode)
+            logger.LogInformation($"Attempt to add subscription, response {response.StatusCode}");
+
+            if (response.IsSuccessStatusCode)
                 return Ok();
             else
                 return BadRequest(await response.Content.ReadAsStringAsync());
@@ -126,8 +139,10 @@ namespace Gateway.Controllers
         [Route("subscribe/{author}")]
         public async Task<IActionResult> RemoveSubscription(string author)
         {
-            var subscriber = await GetName();
+            var subscriber = await GetCurrentUsername();
             var response = await subscriptionsService.RemoveSubscription(subscriber, author);
+            logger.LogInformation($"Attempt to remove subscription, response {response.StatusCode}");
+
             if (response.IsSuccessStatusCode)
                 return Ok();
             else
@@ -142,6 +157,20 @@ namespace Gateway.Controllers
                 }, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
             return identity.Name;
+        }
+
+        private string GetCurrentCookie()
+        {
+            string cookie = User.FindFirstValue(ClaimTypes.Name);
+            logger.LogInformation($"Requested current cookie, value: {cookie}");
+            return cookie;
+        }
+
+        private async Task<string> GetCurrentUsername()
+        {
+            string name = await accountsService.GetNameByClaim(GetCurrentCookie());
+            logger.LogInformation($"Requested current username, value: {name}");
+            return name;
         }
     }
 }

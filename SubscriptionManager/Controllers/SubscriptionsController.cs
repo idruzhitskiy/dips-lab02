@@ -21,25 +21,31 @@ namespace SubscriptionManager.Controllers
         [HttpGet("{subscriber}")]
         public async Task<List<string>> GetAuthorsForName(string subscriber)
         {
-            return db.Subscriptions.Where(s => s.Subscriber == subscriber).Select(s => s.Author).ToList();
+            return db.Subscriptions.Where(s => s.Subscriber.ToLowerInvariant() == subscriber.ToLowerInvariant()).Select(s => s.Author).ToList();
         }
 
         [HttpPost("{subscriber}")]
         public async Task<IActionResult> AddSubscription(string subscriber, string author)
         {
-            var subscription = new Subscription { Subscriber = subscriber, Author = author };
+            var subscription = new Subscription { Subscriber = subscriber.ToLowerInvariant(), Author = author.ToLowerInvariant() };
             if ((await db.Subscriptions.AddAsync(subscription)).State == EntityState.Added)
+            {
+                db.SaveChanges();
                 return Ok();
+            }
             return BadRequest();
         }
 
         [HttpDelete("{subscriber}/{author}")]
         public async Task<IActionResult> RemoveSubscription(string subscriber, string author)
         {
-            var subscription = await db.Subscriptions.FirstOrDefaultAsync(s => s.Subscriber == subscriber && s.Author == author);
+            var subscription = await db.Subscriptions.FirstOrDefaultAsync(s => s.Subscriber.ToLowerInvariant() == subscriber.ToLowerInvariant() && s.Author.ToLowerInvariant() == author.ToLowerInvariant());
             if (subscription != null)
                 if (db.Subscriptions.Remove(subscription).State == EntityState.Deleted)
+                {
+                    db.SaveChanges();
                     return Ok();
+                }
             return BadRequest();
         }
     }
