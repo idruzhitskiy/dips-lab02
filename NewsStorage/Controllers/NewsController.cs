@@ -31,7 +31,7 @@ namespace NewsStorage.Controllers
         public async Task<List<string>> GetNewsForUser([FromRoute]string name, int page, int perpage)
         {
             logger.LogDebug($"Retrieving news for user {name}");
-            var authors = await subscriptions.GetSubscribedAuthorsForName(name);
+            var authors = await subscriptions.GetSubscribedAuthorsForName(name, 0, 0);
             logger.LogDebug($"Authors for user {name}: {string.Join(", ", authors)} ({authors.Count})");
             var news = db.News.Where(n => authors.Contains(n.Author));
             logger.LogDebug($"Found {news.Count()} news for user {name}");

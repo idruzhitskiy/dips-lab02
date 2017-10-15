@@ -11,9 +11,9 @@ namespace Gateway.Services
     {
         public SubscriptionsService(string address) : base(address) { }
 
-        public async Task<List<string>> GetSubscribedAuthorsForName(string name)
+        public async Task<List<string>> GetSubscribedAuthorsForName(string name, int page, int perpage)
         {
-            return JsonConvert.DeserializeObject<List<string>>(await (await Get($"{name}")).Content.ReadAsStringAsync());
+            return JsonConvert.DeserializeObject<List<string>>(await (await Get($"{name}?page={page}&perpage={perpage}")).Content.ReadAsStringAsync());
         }
 
         public async Task<HttpResponseMessage> AddSubscription(string subscriber, string author)

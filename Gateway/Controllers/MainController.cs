@@ -37,18 +37,9 @@ namespace Gateway.Controllers
 
         // GET api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IActionResult> Get()
         {
-            return new string[]
-            {
-                "POST: /login (email, pswd)",
-                "POST: /register (email, pswd)",
-                "GET: /logout",
-                "GET: /news",
-                "POST: /news (text)",
-                "GET: /subscribe?user",
-                "DELETE: /subscribe?user"
-            };
+            return Ok();
         }
 
         [HttpPost("login")]
@@ -100,7 +91,7 @@ namespace Gateway.Controllers
 
         [HttpGet("news")]
         [Authorize]
-        public async Task<List<string>> GetNews(int page = 0, int perpage = 10)
+        public async Task<List<string>> GetNews(int page = 0, int perpage = 0)
         {
             var name = await GetCurrentUsername();
             List<string> response = await newsService.GetNewsForUser(name, page, perpage);
@@ -122,12 +113,23 @@ namespace Gateway.Controllers
         }
 
         [HttpGet]
-        [Route("subscribe/{author}")]
-        public async Task<IActionResult> AddSubscription(string author)
+        [Route("subscriptions")]
+        public async Task<List<string>> GetSubscribedAuthors(int page = 0, int perpage = 0)
+        {
+            var user = await GetCurrentUsername();
+            logger.LogInformation($"Requesting authors for user {user}");
+            var authors = await subscriptionsService.GetSubscribedAuthorsForName(user, page, perpage);
+            logger.LogInformation($"Found {authors.Count()} authors for user {user}");
+            return authors;
+        }
+
+        [HttpPost]
+        [Route("subscriptions")]
+        public async Task<IActionResult> AddSubscription(AddSubscriptionModel addSubscriptionModel)
         {
             var subscriber = await GetCurrentUsername();
-            var response = await subscriptionsService.AddSubscription(subscriber, author);
-            logger.LogInformation($"Attempt to add subscription, response {response.StatusCode}");
+            var response = await subscriptionsService.AddSubscription(subscriber, addSubscriptionModel.Author);
+            logger.LogInformation($"Attempt to add subscription {subscriber}-{addSubscriptionModel.Author}, response {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
                 return Ok();
@@ -136,12 +138,12 @@ namespace Gateway.Controllers
         }
 
         [HttpDelete]
-        [Route("subscribe/{author}")]
+        [Route("subscriptions/{author}")]
         public async Task<IActionResult> RemoveSubscription(string author)
         {
             var subscriber = await GetCurrentUsername();
             var response = await subscriptionsService.RemoveSubscription(subscriber, author);
-            logger.LogInformation($"Attempt to remove subscription, response {response.StatusCode}");
+            logger.LogInformation($"Attempt to remove subscription {subscriber}-{author}, response {response.StatusCode}");
 
             if (response.IsSuccessStatusCode)
                 return Ok();

@@ -22,12 +22,23 @@ namespace SubscriptionManager.Controllers
         }
 
         [HttpGet("{subscriber}")]
-        public async Task<List<string>> GetAuthorsForName(string subscriber)
+        public async Task<List<string>> GetAuthorsForName(string subscriber, int page, int perpage)
         {
             logger.LogDebug($"Retriving subscriptions for user {subscriber}");
-            List<string> result = db.Subscriptions.Where(s => s.Subscriber.ToLowerInvariant() == subscriber.ToLowerInvariant()).Select(s => s.Author).ToList();
-            logger.LogDebug($"Retrieved {result.Count} subscribers: {string.Join(", ", result)}");
-            return result;
+            var result = db.Subscriptions.Where(s => s.Subscriber.ToLowerInvariant() == subscriber.ToLowerInvariant());
+            logger.LogDebug($"Found {result.Count()} authors for user {subscriber}");
+            if (page != 0 && perpage != 0)
+            {
+                logger.LogDebug($"Skipping {page * perpage} entities due to pagination");
+                result = result.Skip(page * perpage);
+            }
+            if (perpage != 0)
+            {
+                logger.LogDebug($"Taking at max {perpage} entities");
+                result = result.Take(perpage);
+            }
+            logger.LogDebug($"Retrieved {result.Count()} authors: {string.Join(", ", result)}");
+            return result.Select(s => s.Author).ToList();
         }
 
         [HttpPost("{subscriber}")]
