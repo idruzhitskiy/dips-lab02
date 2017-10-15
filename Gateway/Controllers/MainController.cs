@@ -100,10 +100,10 @@ namespace Gateway.Controllers
 
         [HttpGet("news")]
         [Authorize]
-        public async Task<List<string>> GetNews() // TODO: string -> news
+        public async Task<List<string>> GetNews(int page = 0, int perpage = 10)
         {
             var name = await GetCurrentUsername();
-            List<string> response = await newsService.GetNewsForUser(name);
+            List<string> response = await newsService.GetNewsForUser(name, page, perpage);
             logger.LogInformation($"Number of news for user {name}: {response.Count}");
             return response;
         }

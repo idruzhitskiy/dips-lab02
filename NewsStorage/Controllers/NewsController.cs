@@ -28,16 +28,26 @@ namespace NewsStorage.Controllers
         }
 
         [HttpGet("{name}")]
-        public async Task<List<string>> GetNewsForUser([FromRoute]string name)
+        public async Task<List<string>> GetNewsForUser([FromRoute]string name, int page, int perpage)
         {
             logger.LogDebug($"Retrieving news for user {name}");
             var authors = await subscriptions.GetSubscribedAuthorsForName(name);
             logger.LogDebug($"Authors for user {name}: {string.Join(", ", authors)} ({authors.Count})");
             var news = db.News.Where(n => authors.Contains(n.Author));
             logger.LogDebug($"Found {news.Count()} news for user {name}");
-            return news
-                .OrderByDescending(n => n.Date)
-                .Select(n => $"{n.Header}\n{n.Body}\n{n.Author}")
+            news = news.OrderByDescending(n => n.Date);
+            if (perpage != 0 && page != 0)
+            {
+                logger.LogDebug($"Skipping {perpage * page} news due to pagination");
+                news = news.Skip(perpage * page);
+            }
+            if (perpage != 0)
+            {
+                logger.LogDebug($"Retrievin at max {perpage} news");
+                news = news.Take(perpage);
+            }
+            logger.LogDebug($"Returning {news.Count()} news");
+            return news.Select(n => $"{n.Header}\n{n.Body}\n{n.Author}")
                 .ToList();
         }
 

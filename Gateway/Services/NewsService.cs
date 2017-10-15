@@ -12,9 +12,9 @@ namespace Gateway.Services
     {
         public NewsService(string baseAddress) : base(baseAddress) { }
 
-        public async Task<List<string>> GetNewsForUser(string name)
+        public async Task<List<string>> GetNewsForUser(string name, int page, int perpage)
         {
-            HttpResponseMessage httpResponseMessage = await Get($"{name.ToLowerInvariant()}");
+            HttpResponseMessage httpResponseMessage = await Get($"{name.ToLowerInvariant()}?page={page}&perpage={perpage}");
             string response = await httpResponseMessage.Content.ReadAsStringAsync();
             try
             {
