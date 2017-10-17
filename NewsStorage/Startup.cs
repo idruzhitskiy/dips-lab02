@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+using Gateway.Services.Implementations;
+using Gateway.Services;
 
 namespace NewsStorage
 {
@@ -30,6 +32,7 @@ namespace NewsStorage
                 options.UseSqlServer(Configuration.GetConnectionString("NewsConnection")));
 
             services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
+            services.AddTransient<ISubscriptionsService, SubscriptionsService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

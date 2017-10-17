@@ -14,25 +14,27 @@ using Microsoft.AspNetCore.Authentication;
 using Gateway.Models;
 using Gateway.Services;
 using Microsoft.Extensions.Logging;
+using Gateway.Services.Implementations;
 
 namespace Gateway.Controllers
 {
     [Route("")]
     public class MainController : Controller
     {
-        private AccountsService accountsService;
-        private SubscriptionsService subscriptionsService;
-        private NewsService newsService;
+        private IAccountsService accountsService;
+        private ISubscriptionsService subscriptionsService;
+        private INewsService newsService;
         private ILogger<MainController> logger;
 
-        public MainController(IConfiguration configuration, ILogger<MainController> logger)
+        public MainController(ILogger<MainController> logger,
+            IAccountsService accountsService,
+            ISubscriptionsService subscriptionsService,
+            INewsService newsService)
         {
             this.logger = logger;
-            var addresses = configuration.GetSection("Addresses");
-            accountsService = new AccountsService(addresses["Accs"]);
-            subscriptionsService = new SubscriptionsService(addresses["Subscriptions"]);
-            newsService = new NewsService(addresses["News"]);
-            logger.LogInformation("Controller init successful");
+            this.accountsService = accountsService;
+            this.subscriptionsService = subscriptionsService;
+            this.newsService = newsService;
         }
 
         // GET api/values

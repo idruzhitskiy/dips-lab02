@@ -1,4 +1,5 @@
 ﻿using Gateway.Models;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -6,11 +7,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Gateway.Services
+namespace Gateway.Services.Implementations
 {
-    public class NewsService : Service
+    public class NewsService : Service, INewsService
     {
-        public NewsService(string baseAddress) : base(baseAddress) { }
+        public NewsService(IConfiguration configuration) 
+            : base(configuration.GetSection("Addresses")["News"]) { }
 
         public async Task<List<string>> GetNewsForUser(string name, int page, int perpage)
         {

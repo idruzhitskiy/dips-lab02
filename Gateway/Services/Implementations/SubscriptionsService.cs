@@ -1,15 +1,17 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Gateway.Services
+namespace Gateway.Services.Implementations
 {
-    public class SubscriptionsService : Service
+    public class SubscriptionsService : Service, ISubscriptionsService
     {
-        public SubscriptionsService(string address) : base(address) { }
+        public SubscriptionsService(IConfiguration configuration) 
+            : base(configuration.GetSection("Addresses")["Subscriptions"]) { }
 
         public async Task<List<string>> GetSubscribedAuthorsForName(string name, int page, int perpage)
         {

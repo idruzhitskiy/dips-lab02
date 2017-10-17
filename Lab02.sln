@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentication", "Authentic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NewsStorage", "NewsStorage\NewsStorage.csproj", "{CACB163A-21B3-4FFD-97CF-3E7C948DCE4B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubscriptionManager", "SubscriptionManager\SubscriptionManager.csproj", "{51350007-21DE-4FAB-8AAB-74A6694D9637}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubscriptionManager", "SubscriptionManager\SubscriptionManager.csproj", "{51350007-21DE-4FAB-8AAB-74A6694D9637}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{41906948-D46A-4AF1-AC31-A504AF21677F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{51350007-21DE-4FAB-8AAB-74A6694D9637}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51350007-21DE-4FAB-8AAB-74A6694D9637}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{51350007-21DE-4FAB-8AAB-74A6694D9637}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41906948-D46A-4AF1-AC31-A504AF21677F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41906948-D46A-4AF1-AC31-A504AF21677F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41906948-D46A-4AF1-AC31-A504AF21677F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41906948-D46A-4AF1-AC31-A504AF21677F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

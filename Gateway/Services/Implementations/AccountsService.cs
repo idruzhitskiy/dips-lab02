@@ -1,5 +1,6 @@
 ﻿using Gateway.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,11 +10,12 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Gateway.Services
+namespace Gateway.Services.Implementations
 {
-    public class AccountsService : Service
+    public class AccountsService : Service, IAccountsService
     {
-        public AccountsService(string address) : base(address) { }
+        public AccountsService(IConfiguration configuration) : 
+            base(configuration.GetSection("Addresses")["Accs"]) { }
 
         public async Task<HttpResponseMessage> Login(LoginModel loginModel) => await PostJson("login", loginModel);
 

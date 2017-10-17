@@ -16,22 +16,22 @@ namespace NewsStorage.Controllers
     public class NewsController : Controller
     {
         private ApplicationDbContext db;
-        private SubscriptionsService subscriptions;
+        private ISubscriptionsService subscriptionsService;
         private ILogger<NewsController> logger;
 
-        public NewsController(ApplicationDbContext db, IConfiguration configuration,
+        public NewsController(ApplicationDbContext db, ISubscriptionsService subscriptionsService,
             ILogger<NewsController> logger)
         {
             this.db = db;
-            subscriptions = new SubscriptionsService(configuration.GetSection("Addresses")["Subscriptions"]);
             this.logger = logger;
+            this.subscriptionsService = subscriptionsService;
         }
 
         [HttpGet("{name}")]
         public async Task<List<string>> GetNewsForUser([FromRoute]string name, int page, int perpage)
         {
             logger.LogDebug($"Retrieving news for user {name}");
-            var authors = await subscriptions.GetSubscribedAuthorsForName(name, 0, 0);
+            var authors = await subscriptionsService.GetSubscribedAuthorsForName(name, 0, 0);
             logger.LogDebug($"Authors for user {name}: {string.Join(", ", authors)} ({authors.Count})");
             var news = db.News.Where(n => authors.Contains(n.Author));
             logger.LogDebug($"Found {news.Count()} news for user {name}");
@@ -43,7 +43,7 @@ namespace NewsStorage.Controllers
             }
             if (perpage != 0)
             {
-                logger.LogDebug($"Retrievin at max {perpage} news");
+                logger.LogDebug($"Retrieving at max {perpage} news");
                 news = news.Take(perpage);
             }
             logger.LogDebug($"Returning {news.Count()} news");
