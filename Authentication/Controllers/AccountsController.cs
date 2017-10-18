@@ -57,51 +57,5 @@ namespace Authentication.Controllers
             logger.LogWarning($"User {userModel.Username} already exists");
             return BadRequest("Duplicate");
         }
-
-        //[HttpPost("claim")]
-        //public async Task<IActionResult> AddClaim(string name, string claim)
-        //{
-        //    logger.LogDebug($"Adding claim {claim} to user {name}");
-        //    var user = db.Users.FirstOrDefault(u => u.Name == name);
-        //    if (user != null)
-        //    {
-        //        user.AddClaim(claim);
-        //        var result = db.Users.Update(user);
-        //        logger.LogDebug($"User {name} modification result: {result?.State}");
-        //        db.SaveChanges();
-        //        return Ok();
-        //    }
-        //    logger.LogWarning($"User {name} not found");
-        //    return BadRequest("User not found");
-        //}
-
-        //[HttpPut("claim")]
-        //public async Task<string> GetNameByClaim(string claim)
-        //{
-        //    logger.LogDebug($"Retrieving name for claim {claim}");
-        //    var user = db.Users.FirstOrDefault(u => u.ContainsClaim(claim));
-        //    if (user == null)
-        //        logger.LogWarning($"User with claim {claim} not found");
-        //    else
-        //        logger.LogDebug($"Found user {user.Name}");
-        //    return user?.Name;
-        //}
-
-        //[HttpGet("claim/{claim}")]
-        //public async Task<IActionResult> RemoveClaim(string claim)
-        //{
-        //    logger.LogDebug($"Removing claim {claim}");
-        //    var user = db.Users.FirstOrDefault(u => u.ContainsClaim(claim));
-        //    if (user != null)
-        //    {
-        //        user.RemoveClaim(claim);
-        //        var result = db.Users.Update(user);
-        //        logger.LogDebug($"User {user.Name} modification result: {result?.State}");
-        //        db.SaveChanges();
-        //        return Ok();
-        //    }
-        //    logger.LogWarning($"User with claim {claim} not found");
-        //    return BadRequest("User not found");
-        //}
     }
 }

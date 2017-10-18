@@ -37,33 +37,6 @@ namespace Gateway.Controllers
             this.newsService = newsService;
         }
 
-        //[HttpPost("login")]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> Login(LoginModel loginModel)
-        //{
-        //    var response = await accountsService.Login(loginModel);
-        //    logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
-
-        //    if (response?.StatusCode == System.Net.HttpStatusCode.OK)
-        //    {
-        //        logger.LogInformation("Adding claim");
-        //        response = await accountsService.AddClaim(loginModel.Username, await Authorize());
-        //        logger.LogInformation($"Adding claim response: {response?.StatusCode}");
-        //        return Ok();
-        //    }
-        //    else if (response != null)
-        //    {
-        //        logger.LogWarning($"User {loginModel.Username} not authorized");
-        //        return Unauthorized();
-        //    }
-        //    else
-        //    {
-        //        logger.LogCritical("Accounts service unavailable");
-        //        return NotFound("Service unavailable");
-        //    }
-        //}
-
-
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register(UserModel userModel)
@@ -90,26 +63,7 @@ namespace Gateway.Controllers
                 return NotFound("Service unavailable");
             }
         }
-
-        //[HttpGet("{user}/logout")]
-        //[Authorize]
-        //public async Task<IActionResult> Logout(string user)
-        //{
-        //    var response = await accountsService.RemoveClaim(user);
-        //    if (HttpContext != null)
-        //        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        //    if (response != null)
-        //    {
-        //        logger.LogInformation($"Attempt to remove claim from users database, result: {response.StatusCode}");
-        //        return Ok();
-        //    }
-        //    else
-        //    {
-        //        logger.LogCritical("Accounts service unavailable");
-        //        return NotFound("Service unavailable");
-        //    }
-        //}
-
+        
         [HttpGet("{name}/news")]
         [Authorize]
         public async Task<List<string>> GetNews(string name, int page = 0, int perpage = 0)
