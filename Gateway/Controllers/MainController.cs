@@ -38,7 +38,6 @@ namespace Gateway.Controllers
         }
 
         [HttpPost("register")]
-        [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterModel userModel)
         {
             var response = await accountsService.Register(userModel);
@@ -64,7 +63,6 @@ namespace Gateway.Controllers
         }
         
         [HttpGet("{name}/news")]
-        [Authorize]
         public async Task<List<string>> GetNews(string name, int page = 0, int perpage = 0)
         {
             var userExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = name });
@@ -87,7 +85,6 @@ namespace Gateway.Controllers
         }
 
         [HttpPost("news")]
-        [Authorize]
         public async Task<IActionResult> AddNews(NewsModel news)
         {
             var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = news.Author });
@@ -115,7 +112,6 @@ namespace Gateway.Controllers
         }
 
         [HttpGet("{subscriber}/subscriptions")]
-        [Authorize]
         public async Task<List<string>> GetSubscribedAuthors(string subscriber, int page = 0, int perpage = 0)
         {
             var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
@@ -139,7 +135,6 @@ namespace Gateway.Controllers
         }
 
         [HttpPost("{subscriber}/subscriptions")]
-        [Authorize]
         public async Task<IActionResult> AddSubscription(string subscriber, AddSubscriptionModel addSubscriptionModel)
         {
             var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
@@ -170,7 +165,6 @@ namespace Gateway.Controllers
         }
 
         [HttpDelete("{subscriber}/subscriptions/{author}")]
-        [Authorize]
         public async Task<IActionResult> RemoveSubscription(string subscriber, string author)
         {
             var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
