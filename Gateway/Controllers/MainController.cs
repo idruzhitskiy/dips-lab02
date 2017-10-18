@@ -39,7 +39,7 @@ namespace Gateway.Controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(UserModel userModel)
+        public async Task<IActionResult> Register(RegisterModel userModel)
         {
             var response = await accountsService.Register(userModel);
             logger.LogInformation($"Response from accounts service: {response?.StatusCode}");

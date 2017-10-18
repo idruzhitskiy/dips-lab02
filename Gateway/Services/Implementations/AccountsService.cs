@@ -19,7 +19,7 @@ namespace Gateway.Services.Implementations
 
         public async Task<HttpResponseMessage> CheckIfUserExists(ExistsModel loginModel) => await PostJson("login", loginModel);
 
-        public async Task<HttpResponseMessage> Register(UserModel userModel) => await PostJson("register", userModel);
+        public async Task<HttpResponseMessage> Register(RegisterModel userModel) => await PostJson("register", userModel);
 
         public async Task<HttpResponseMessage> AddClaim(string name, string claim)
         {

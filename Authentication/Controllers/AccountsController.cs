@@ -42,10 +42,10 @@ namespace Authentication.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserModel userModel)
+        public async Task<IActionResult> Register([FromBody] RegisterModel userModel)
         {
             logger.LogDebug($"Register request, username: {userModel.Username}");
-            User user = db.Users.FirstOrDefault(u => u.Name == userModel.Username && u.Password == userModel.Password);
+            User user = db.Users.FirstOrDefault(u => u.Name == userModel.Username);
             if (user == null)
             {
                 logger.LogDebug($"Registering user {userModel.Username}");

@@ -38,7 +38,7 @@ namespace Tests
             accountsService = GetAccountsService(registerCode: HttpStatusCode.OK);
             var mainController = GetMainController();
 
-            var result = mainController.Register(Mock.Of<UserModel>(lm => lm.Username == "User")).Result;
+            var result = mainController.Register(Mock.Of<RegisterModel>(lm => lm.Username == "User")).Result;
             Assert.IsTrue(result is OkResult);
         }
 
@@ -48,7 +48,7 @@ namespace Tests
             accountsService = GetAccountsService(registerCode: HttpStatusCode.Unauthorized);
             var mainController = GetMainController();
 
-            var result = mainController.Register(Mock.Of<UserModel>(lm => lm.Username == "User")).Result;
+            var result = mainController.Register(Mock.Of<RegisterModel>(lm => lm.Username == "User")).Result;
             Assert.IsTrue(result is BadRequestObjectResult);
         }
 
@@ -58,7 +58,7 @@ namespace Tests
             accountsService = GetEmptyAccountsService();
             var mainController = GetMainController();
 
-            var result = mainController.Register(Mock.Of<UserModel>(lm => lm.Username == "User")).Result;
+            var result = mainController.Register(Mock.Of<RegisterModel>(lm => lm.Username == "User")).Result;
             Assert.IsTrue(result is NotFoundObjectResult);
         }
 
@@ -280,7 +280,7 @@ namespace Tests
         {
             return Mock.Of<IAccountsService>(srv =>
                 srv.CheckIfUserExists(It.IsAny<ExistsModel>()) == Task.FromResult(GetResponseMessage(loginCode)) &&
-                srv.Register(It.IsAny<UserModel>()) == Task.FromResult(GetResponseMessage(registerCode)) &&
+                srv.Register(It.IsAny<RegisterModel>()) == Task.FromResult(GetResponseMessage(registerCode)) &&
                 srv.GetNameByClaim(It.IsAny<string>()) == Task.FromResult(currentUsername) &&
                 srv.RemoveClaim(It.IsAny<string>()) == Task.FromResult(GetResponseMessage(removeClaimCode)));
         }
