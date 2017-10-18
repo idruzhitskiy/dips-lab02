@@ -170,7 +170,7 @@ namespace Tests
             subscriptionsService = GetSubscriptionsService(addCode: HttpStatusCode.OK);
             var mainController = GetMainController();
 
-            var result = mainController.AddSubscription(string.Empty, Mock.Of<AddSubscriptionModel>()).Result;
+            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
             Assert.IsTrue(result is OkResult);
         }
 
@@ -180,7 +180,7 @@ namespace Tests
             subscriptionsService = GetSubscriptionsService(addCode: HttpStatusCode.InternalServerError);
             var mainController = GetMainController();
 
-            var result = mainController.AddSubscription(string.Empty, Mock.Of<AddSubscriptionModel>()).Result;
+            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
             Assert.IsTrue(result is BadRequestObjectResult);
         }
 
@@ -190,7 +190,7 @@ namespace Tests
             subscriptionsService = GetEmptySubscriptionsService();
             var mainController = GetMainController();
 
-            var result = mainController.AddSubscription(string.Empty, Mock.Of<AddSubscriptionModel>()).Result;
+            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
             Assert.IsTrue(result is NotFoundObjectResult);
         }
 
@@ -230,7 +230,7 @@ namespace Tests
             accountsService = GetAccountsService(loginCode: HttpStatusCode.BadRequest);
             var mainController = GetMainController();
 
-            var result = mainController.AddSubscription(string.Empty, Mock.Of<AddSubscriptionModel>()).Result;
+            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
             Assert.IsTrue(result is NotFoundObjectResult);
         }
 
@@ -240,7 +240,7 @@ namespace Tests
             accountsService = GetEmptyAccountsService();
             var mainController = GetMainController();
 
-            var result = mainController.AddSubscription(string.Empty, Mock.Of<AddSubscriptionModel>()).Result;
+            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
             Assert.IsTrue(result is NotFoundObjectResult);
         }
 

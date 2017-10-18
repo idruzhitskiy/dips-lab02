@@ -134,11 +134,11 @@ namespace Gateway.Controllers
             }
         }
 
-        [HttpPost("{subscriber}/subscriptions")]
-        public async Task<IActionResult> AddSubscription(string subscriber, AddSubscriptionModel addSubscriptionModel)
+        [HttpPost("{subscriber}/subscriptions/{author}")]
+        public async Task<IActionResult> AddSubscription(string subscriber, string author)
         {
             var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
-            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = addSubscriptionModel.Author });
+            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = author});
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
 
             if (subscriberExists == null || authorExists == null)
@@ -148,10 +148,10 @@ namespace Gateway.Controllers
             if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
                 return NotFound("Author doesn't exists");
 
-            var response = await subscriptionsService.AddSubscription(subscriber, addSubscriptionModel.Author);
+            var response = await subscriptionsService.AddSubscription(subscriber, author);
             if (response != null)
             {
-                logger.LogInformation($"Attempt to add subscription {subscriber}-{addSubscriptionModel.Author}, response {response.StatusCode}");
+                logger.LogInformation($"Attempt to add subscription {subscriber}-{author}, response {response.StatusCode}");
                 if (response.IsSuccessStatusCode)
                     return Ok();
                 else

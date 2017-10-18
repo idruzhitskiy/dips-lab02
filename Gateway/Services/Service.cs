@@ -74,7 +74,7 @@ namespace Gateway.Services
             using (var client = new HttpClient())
                 try
                 {
-                    return await client.DeleteAsync(addr);
+                    return await client.DeleteAsync(GetAddress(addr));
                 }
                 catch
                 {
