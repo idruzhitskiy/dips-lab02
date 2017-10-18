@@ -82,7 +82,7 @@ namespace Gateway.Controllers
             {
                 string respContent = response.Content != null ? await response.Content.ReadAsStringAsync() : string.Empty;
                 logger.LogError($"User {userModel.Username} not registered, error content: {respContent}");
-                return Unauthorized();
+                return BadRequest(respContent);
             }
             else
             {

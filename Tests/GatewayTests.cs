@@ -79,7 +79,7 @@ namespace Tests
             var mainController = GetMainController();
 
             var result = mainController.Register(Mock.Of<UserModel>(lm => lm.Username == "User")).Result;
-            Assert.IsTrue(result is UnauthorizedResult);
+            Assert.IsTrue(result is BadRequestObjectResult);
         }
 
         [TestMethod]
