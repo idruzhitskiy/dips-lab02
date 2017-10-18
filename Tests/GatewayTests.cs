@@ -103,6 +103,7 @@ namespace Tests
             Assert.AreEqual(news, result);
         }
 
+        [TestMethod]
         public void TestGetNewsNoService()
         {
             newsService = GetEmptyNewsService();
@@ -223,6 +224,26 @@ namespace Tests
             Assert.IsTrue(result is NotFoundObjectResult);
         }
 
+        [TestMethod]
+        public void TestLogout()
+        {
+            accountsService = GetAccountsService(removeClaimCode: HttpStatusCode.OK);
+            var mainController = GetMainController();
+
+            var result = mainController.Logout().Result;
+            Assert.IsTrue(result is OkResult);
+        }
+
+        [TestMethod]
+        public void TestLogoutNoService()
+        {
+            accountsService = GetEmptyAccountsService();
+            var mainController = GetMainController();
+
+            var result = mainController.Logout().Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
         #region Support
         private ISubscriptionsService GetSubscriptionsService(List<string> authors = null, HttpStatusCode addCode = HttpStatusCode.OK, HttpStatusCode removeCode = HttpStatusCode.OK)
         {
@@ -234,12 +255,14 @@ namespace Tests
 
         private IAccountsService GetAccountsService(HttpStatusCode loginCode = HttpStatusCode.OK,
             HttpStatusCode registerCode = HttpStatusCode.OK,
-            string currentUsername = "User")
+            string currentUsername = "User",
+            HttpStatusCode removeClaimCode = HttpStatusCode.OK)
         {
             return Mock.Of<IAccountsService>(srv =>
                 srv.Login(It.IsAny<LoginModel>()) == Task.FromResult(GetResponseMessage(loginCode)) &&
                 srv.Register(It.IsAny<UserModel>()) == Task.FromResult(GetResponseMessage(registerCode)) &&
-                srv.GetNameByClaim(It.IsAny<string>()) == Task.FromResult(currentUsername));
+                srv.GetNameByClaim(It.IsAny<string>()) == Task.FromResult(currentUsername) &&
+                srv.RemoveClaim(It.IsAny<string>()) == Task.FromResult(GetResponseMessage(removeClaimCode)));
         }
 
         private INewsService GetNewsService(List<string> getNewsContent = null, HttpStatusCode addNewsCode = HttpStatusCode.OK)

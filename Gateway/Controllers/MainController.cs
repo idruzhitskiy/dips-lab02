@@ -96,7 +96,8 @@ namespace Gateway.Controllers
         public async Task<IActionResult> Logout()
         {
             var response = await accountsService.RemoveClaim(await GetCurrentUsername());
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            if (HttpContext != null)
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             if (response != null)
             {
                 logger.LogInformation($"Attempt to remove claim from users database, result: {response.StatusCode}");
