@@ -32,36 +32,6 @@ namespace Tests
             subscriptionsService = GetSubscriptionsService();
         }
 
-        //[TestMethod]
-        //public void TestLoginValid()
-        //{
-        //    accountsService = GetAccountsService(loginCode: HttpStatusCode.OK);
-        //    var mainController = GetMainController();
-
-        //    var result = mainController.Login(Mock.Of<LoginModel>(lm => lm.Username == "User")).Result;
-        //    Assert.IsTrue(result is OkResult);
-        //}
-
-        //[TestMethod]
-        //public void TestLoginNotValid()
-        //{
-        //    accountsService = GetAccountsService(loginCode: HttpStatusCode.Unauthorized);
-        //    var mainController = GetMainController();
-
-        //    var result = mainController.Login(Mock.Of<LoginModel>(lm => lm.Username == "User")).Result;
-        //    Assert.IsTrue(result is UnauthorizedResult);
-        //}
-
-        //[TestMethod]
-        //public void TestLoginNoService()
-        //{
-        //    accountsService = GetEmptyAccountsService();
-        //    var mainController = GetMainController();
-
-        //    var result = mainController.Login(Mock.Of<LoginModel>(lm => lm.Username == "User")).Result;
-        //    Assert.IsTrue(result is NotFoundObjectResult);
-        //}
-
         [TestMethod]
         public void TestRegisterValid()
         {
@@ -114,6 +84,16 @@ namespace Tests
         }
 
         [TestMethod]
+        public void TestGetNewsNoUser()
+        {
+            accountsService = GetAccountsService(HttpStatusCode.BadRequest);
+            var mainController = GetMainController();
+
+            var result = mainController.GetNews(string.Empty).Result;
+            Assert.IsTrue(result == null);
+        }
+
+        [TestMethod]
         public void TestAddNewsValid()
         {
             newsService = GetNewsService(addNewsCode: HttpStatusCode.OK);
@@ -137,6 +117,26 @@ namespace Tests
         public void TestAddNewsNoService()
         {
             newsService = GetEmptyNewsService();
+            var mainController = GetMainController();
+
+            var result = mainController.AddNews(Mock.Of<NewsModel>()).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
+        [TestMethod]
+        public void TestAddNewsNoUser()
+        {
+            accountsService = GetAccountsService(HttpStatusCode.BadRequest);
+            var mainController = GetMainController();
+
+            var result = mainController.AddNews(Mock.Of<NewsModel>()).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
+        [TestMethod]
+        public void TestAddNewsNoAccountsService()
+        {
+            accountsService = GetEmptyAccountsService();
             var mainController = GetMainController();
 
             var result = mainController.AddNews(Mock.Of<NewsModel>()).Result;
@@ -224,25 +224,45 @@ namespace Tests
             Assert.IsTrue(result is NotFoundObjectResult);
         }
 
-        //[TestMethod]
-        //public void TestLogout()
-        //{
-        //    accountsService = GetAccountsService(removeClaimCode: HttpStatusCode.OK);
-        //    var mainController = GetMainController();
+        [TestMethod]
+        public void TestAddSubscriptionNoUser()
+        {
+            accountsService = GetAccountsService(loginCode: HttpStatusCode.BadRequest);
+            var mainController = GetMainController();
 
-        //    var result = mainController.Logout().Result;
-        //    Assert.IsTrue(result is OkResult);
-        //}
+            var result = mainController.AddSubscription(string.Empty, Mock.Of<AddSubscriptionModel>()).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
 
-        //[TestMethod]
-        //public void TestLogoutNoService()
-        //{
-        //    accountsService = GetEmptyAccountsService();
-        //    var mainController = GetMainController();
+        [TestMethod]
+        public void TestAddSubscriptionNoAccountsService()
+        {
+            accountsService = GetEmptyAccountsService();
+            var mainController = GetMainController();
 
-        //    var result = mainController.Logout().Result;
-        //    Assert.IsTrue(result is NotFoundObjectResult);
-        //}
+            var result = mainController.AddSubscription(string.Empty, Mock.Of<AddSubscriptionModel>()).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
+        [TestMethod]
+        public void TestRemoveSubscriptionNoUser()
+        {
+            accountsService = GetAccountsService(loginCode: HttpStatusCode.BadRequest);
+            var mainController = GetMainController();
+
+            var result = mainController.RemoveSubscription(string.Empty, string.Empty).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
+        [TestMethod]
+        public void TestRemoveSubscriptionNoAccountsService()
+        {
+            accountsService = GetEmptyAccountsService();
+            var mainController = GetMainController();
+
+            var result = mainController.RemoveSubscription(string.Empty, string.Empty).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
 
         #region Support
         private ISubscriptionsService GetSubscriptionsService(List<string> authors = null, HttpStatusCode addCode = HttpStatusCode.OK, HttpStatusCode removeCode = HttpStatusCode.OK)
