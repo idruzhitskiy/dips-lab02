@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 namespace Gateway.Models
 {
-    public class LoginModel
+    public class ExistsModel
     {
         public string Username { get; set; }
-        public string Password { get; set; }
     }
 }

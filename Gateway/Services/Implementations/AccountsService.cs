@@ -17,7 +17,7 @@ namespace Gateway.Services.Implementations
         public AccountsService(IConfiguration configuration) : 
             base(configuration.GetSection("Addresses")["Accs"]) { }
 
-        public async Task<HttpResponseMessage> Login(LoginModel loginModel) => await PostJson("login", loginModel);
+        public async Task<HttpResponseMessage> CheckIfUserExists(ExistsModel loginModel) => await PostJson("login", loginModel);
 
         public async Task<HttpResponseMessage> Register(UserModel userModel) => await PostJson("register", userModel);
 

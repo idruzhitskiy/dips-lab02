@@ -20,8 +20,6 @@ namespace Tests
     public class AuthenticationTests
     {
         private const string username = "User";
-        private const string password = "Password";
-        private const string claim = "Claim";
         private ApplicationDbContext dbContext;
         private ILogger<AccountsController> logger;
 
@@ -35,20 +33,20 @@ namespace Tests
         [TestMethod]
         public void TestLoginValid()
         {
-            dbContext = GetDbContext(new List<User>{ new User { Name = username, Password = password } });
+            dbContext = GetDbContext(new List<User> { new User { Name = username } });
             var accountsController = GetAccountsController();
 
-            var result = accountsController.Login(Mock.Of<LoginModel>(lm => lm.Username == username && lm.Password == password)).Result;
+            var result = accountsController.CheckIfUserExists(Mock.Of<ExistsModel>(lm => lm.Username == username)).Result;
             Assert.IsTrue(result is OkResult);
         }
 
         [TestMethod]
         public void TestLoginNotValid()
         {
-            dbContext = GetDbContext(new List<User> { new User { Name = username, Password = password } });
+            dbContext = GetDbContext(new List<User> { new User { Name = username.Substring(1)} });
             var accountsController = GetAccountsController();
 
-            var result = accountsController.Login(Mock.Of<LoginModel>(lm => lm.Username == username && lm.Password == password.Substring(1))).Result ;
+            var result = accountsController.CheckIfUserExists(Mock.Of<ExistsModel>(lm => lm.Username == username)).Result;
             Assert.IsFalse(result is OkResult);
         }
 
@@ -59,93 +57,93 @@ namespace Tests
             dbContext = GetDbContext(users);
             var accountsController = GetAccountsController();
 
-            var result = accountsController.Register(Mock.Of<UserModel>(um => um.Username == username && um.Password == password)).Result;
+            var result = accountsController.Register(Mock.Of<UserModel>(um => um.Username == username )).Result;
             Assert.IsTrue(result is OkResult);
-            Assert.IsTrue(users.Any(u => u.Name == username && u.Password == password));
+            Assert.IsTrue(users.Any(u => u.Name == username ));
         }
 
         [TestMethod]
         public void TestRegisterNotValid()
         {
-            var users = new List<User> { new User { Name = username, Password = password } };
+            var users = new List<User> { new User { Name = username} };
             dbContext = GetDbContext(users);
             var accountsController = GetAccountsController();
 
-            var result = accountsController.Register(Mock.Of<UserModel>(um => um.Username == username && um.Password == password)).Result;
+            var result = accountsController.Register(Mock.Of<UserModel>(um => um.Username == username )).Result;
             Assert.IsFalse(result is OkResult);
         }
 
-        [TestMethod]
-        public void TestAddClaimValid()
-        {
-            var users = new List<User> { new User { Name = username } };
-            dbContext = GetDbContext(users);
-            var accountsController = GetAccountsController();
+        //[TestMethod]
+        //public void TestAddClaimValid()
+        //{
+        //    var users = new List<User> { new User { Name = username } };
+        //    dbContext = GetDbContext(users);
+        //    var accountsController = GetAccountsController();
 
-            var result = accountsController.AddClaim(username, claim).Result;
-            Assert.IsTrue(result is OkResult);
-            Assert.IsTrue(users.First().ContainsClaim(claim));
-        }
+        //    var result = accountsController.AddClaim(username, claim).Result;
+        //    Assert.IsTrue(result is OkResult);
+        //    Assert.IsTrue(users.First().ContainsClaim(claim));
+        //}
 
-        [TestMethod]
-        public void TestAddClaimNotValid()
-        {
-            var users = new List<User> { new User { Name = username } };
-            dbContext = GetDbContext(users);
-            var accountsController = GetAccountsController();
+        //[TestMethod]
+        //public void TestAddClaimNotValid()
+        //{
+        //    var users = new List<User> { new User { Name = username } };
+        //    dbContext = GetDbContext(users);
+        //    var accountsController = GetAccountsController();
 
-            var result = accountsController.AddClaim(username.Substring(1), claim).Result;
-            Assert.IsFalse(result is OkResult);
-        }
+        //    var result = accountsController.AddClaim(username.Substring(1), claim).Result;
+        //    Assert.IsFalse(result is OkResult);
+        //}
 
-        [TestMethod]
-        public void TestGetNameByClaimValid()
-        {
-            var user = new User { Name = username };
-            user.AddClaim(claim);
-            var users = new List<User> { user };
-            dbContext = GetDbContext(users);
-            var accountsController = GetAccountsController();
+        //[TestMethod]
+        //public void TestGetNameByClaimValid()
+        //{
+        //    var user = new User { Name = username };
+        //    user.AddClaim(claim);
+        //    var users = new List<User> { user };
+        //    dbContext = GetDbContext(users);
+        //    var accountsController = GetAccountsController();
 
-            var result = accountsController.GetNameByClaim(claim).Result;
-            Assert.IsTrue(result == username);
-        }
+        //    var result = accountsController.GetNameByClaim(claim).Result;
+        //    Assert.IsTrue(result == username);
+        //}
 
-        [TestMethod]
-        public void TestGetNameByClaimNotValid()
-        {
-            var users = new List<User> { new User { Name = username } };
-            dbContext = GetDbContext(users);
-            var accountsController = GetAccountsController();
+        //[TestMethod]
+        //public void TestGetNameByClaimNotValid()
+        //{
+        //    var users = new List<User> { new User { Name = username } };
+        //    dbContext = GetDbContext(users);
+        //    var accountsController = GetAccountsController();
 
-            var result = accountsController.GetNameByClaim(claim).Result;
-            Assert.IsTrue(result == null);
-        }
+        //    var result = accountsController.GetNameByClaim(claim).Result;
+        //    Assert.IsTrue(result == null);
+        //}
 
-        [TestMethod]
-        public void TestRemoveClaimValid()
-        {
-            var user = new User { Name = username };
-            user.AddClaim(claim);
-            var users = new List<User> { user };
-            dbContext = GetDbContext(users);
-            var accountsController = GetAccountsController();
+        //[TestMethod]
+        //public void TestRemoveClaimValid()
+        //{
+        //    var user = new User { Name = username };
+        //    user.AddClaim(claim);
+        //    var users = new List<User> { user };
+        //    dbContext = GetDbContext(users);
+        //    var accountsController = GetAccountsController();
 
-            var result = accountsController.RemoveClaim(claim).Result;
-            Assert.IsTrue(result is OkResult);
-            Assert.IsFalse(users.First().ContainsClaim(claim));
-        }
+        //    var result = accountsController.RemoveClaim(claim).Result;
+        //    Assert.IsTrue(result is OkResult);
+        //    Assert.IsFalse(users.First().ContainsClaim(claim));
+        //}
 
-        [TestMethod]
-        public void TestRemoveClaimNotValid()
-        {
-            var users = new List<User> { new User { Name = username } };
-            dbContext = GetDbContext(users);
-            var accountsController = GetAccountsController();
+        //[TestMethod]
+        //public void TestRemoveClaimNotValid()
+        //{
+        //    var users = new List<User> { new User { Name = username } };
+        //    dbContext = GetDbContext(users);
+        //    var accountsController = GetAccountsController();
 
-            var result = accountsController.RemoveClaim(claim).Result;
-            Assert.IsFalse(result is OkResult);
-        }
+        //    var result = accountsController.RemoveClaim(claim).Result;
+        //    Assert.IsFalse(result is OkResult);
+        //}
 
         #region Support
         private AccountsController GetAccountsController()

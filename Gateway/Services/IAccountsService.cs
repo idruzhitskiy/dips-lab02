@@ -9,7 +9,7 @@ namespace Gateway.Services
 {
     public interface IAccountsService
     {
-        Task<HttpResponseMessage> Login(LoginModel loginModel);
+        Task<HttpResponseMessage> CheckIfUserExists(ExistsModel loginModel);
         Task<HttpResponseMessage> Register(UserModel userModel);
         Task<HttpResponseMessage> AddClaim(string name, string claim);
         Task<string> GetNameByClaim(string claim);

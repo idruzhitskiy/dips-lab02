@@ -37,31 +37,31 @@ namespace Gateway.Controllers
             this.newsService = newsService;
         }
 
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginModel loginModel)
-        {
-            var response = await accountsService.Login(loginModel);
-            logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
+        //[HttpPost("login")]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> Login(LoginModel loginModel)
+        //{
+        //    var response = await accountsService.Login(loginModel);
+        //    logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
 
-            if (response?.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                logger.LogInformation("Adding claim");
-                response = await accountsService.AddClaim(loginModel.Username, await Authorize());
-                logger.LogInformation($"Adding claim response: {response?.StatusCode}");
-                return Ok();
-            }
-            else if (response != null)
-            {
-                logger.LogWarning($"User {loginModel.Username} not authorized");
-                return Unauthorized();
-            }
-            else
-            {
-                logger.LogCritical("Accounts service unavailable");
-                return NotFound("Service unavailable");
-            }
-        }
+        //    if (response?.StatusCode == System.Net.HttpStatusCode.OK)
+        //    {
+        //        logger.LogInformation("Adding claim");
+        //        response = await accountsService.AddClaim(loginModel.Username, await Authorize());
+        //        logger.LogInformation($"Adding claim response: {response?.StatusCode}");
+        //        return Ok();
+        //    }
+        //    else if (response != null)
+        //    {
+        //        logger.LogWarning($"User {loginModel.Username} not authorized");
+        //        return Unauthorized();
+        //    }
+        //    else
+        //    {
+        //        logger.LogCritical("Accounts service unavailable");
+        //        return NotFound("Service unavailable");
+        //    }
+        //}
 
 
         [HttpPost("register")]
@@ -74,7 +74,7 @@ namespace Gateway.Controllers
             if (response?.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 logger.LogInformation("Adding claim");
-                response = await accountsService.AddClaim(userModel.Username, await Authorize());
+                //response = await accountsService.AddClaim(userModel.Username, await Authorize());
                 logger.LogInformation($"Adding claim response: {response?.StatusCode}");
                 return Ok();
             }
@@ -91,30 +91,35 @@ namespace Gateway.Controllers
             }
         }
 
-        [HttpGet("logout")]
-        [Authorize]
-        public async Task<IActionResult> Logout()
-        {
-            var response = await accountsService.RemoveClaim(await GetCurrentUsername());
-            if (HttpContext != null)
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            if (response != null)
-            {
-                logger.LogInformation($"Attempt to remove claim from users database, result: {response.StatusCode}");
-                return Ok();
-            }
-            else
-            {
-                logger.LogCritical("Accounts service unavailable");
-                return NotFound("Service unavailable");
-            }
-        }
+        //[HttpGet("{user}/logout")]
+        //[Authorize]
+        //public async Task<IActionResult> Logout(string user)
+        //{
+        //    var response = await accountsService.RemoveClaim(user);
+        //    if (HttpContext != null)
+        //        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        //    if (response != null)
+        //    {
+        //        logger.LogInformation($"Attempt to remove claim from users database, result: {response.StatusCode}");
+        //        return Ok();
+        //    }
+        //    else
+        //    {
+        //        logger.LogCritical("Accounts service unavailable");
+        //        return NotFound("Service unavailable");
+        //    }
+        //}
 
-        [HttpGet("news")]
+        [HttpGet("{name}/news")]
         [Authorize]
-        public async Task<List<string>> GetNews(int page = 0, int perpage = 0)
+        public async Task<List<string>> GetNews(string name, int page = 0, int perpage = 0)
         {
-            var name = await GetCurrentUsername();
+            var userExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = name });
+            logger.LogInformation($"User response: {userExists?.StatusCode}");
+
+            if (userExists == null || userExists.StatusCode != System.Net.HttpStatusCode.OK)
+                return null;
+
             List<string> response = await newsService.GetNewsForUser(name, page, perpage);
             if (response != null)
             {
@@ -132,7 +137,14 @@ namespace Gateway.Controllers
         [Authorize]
         public async Task<IActionResult> AddNews(NewsModel news)
         {
-            news.Author = await GetCurrentUsername();
+            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = news.Author });
+            logger.LogInformation($"Author response: {authorExists?.StatusCode}");
+
+            if (authorExists == null)
+                return NotFound("Accounts service unavailable");
+            if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
+                return NotFound("Author doesn't exists");
+
             var response = await newsService.AddNews(news);
             if (response != null)
             {
@@ -149,16 +161,21 @@ namespace Gateway.Controllers
             }
         }
 
-        [HttpGet("subscriptions")]
+        [HttpGet("{subscriber}/subscriptions")]
         [Authorize]
-        public async Task<List<string>> GetSubscribedAuthors(int page = 0, int perpage = 0)
+        public async Task<List<string>> GetSubscribedAuthors(string subscriber, int page = 0, int perpage = 0)
         {
-            var user = await GetCurrentUsername();
-            logger.LogInformation($"Requesting authors for user {user}");
-            var authors = await subscriptionsService.GetSubscribedAuthorsForName(user, page, perpage);
+            var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
+            logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}");
+
+            if (subscriberExists == null || subscriberExists.StatusCode != System.Net.HttpStatusCode.OK)
+                return null;
+
+            logger.LogInformation($"Requesting authors for user {subscriber}");
+            var authors = await subscriptionsService.GetSubscribedAuthorsForName(subscriber, page, perpage);
             if (authors != null)
             {
-                logger.LogInformation($"Found {authors.Count()} authors for user {user}");
+                logger.LogInformation($"Found {authors.Count()} authors for user {subscriber}");
                 return authors;
             }
             else
@@ -168,11 +185,21 @@ namespace Gateway.Controllers
             }
         }
 
-        [HttpPost("subscriptions")]
+        [HttpPost("{subscriber}/subscriptions")]
         [Authorize]
-        public async Task<IActionResult> AddSubscription(AddSubscriptionModel addSubscriptionModel)
+        public async Task<IActionResult> AddSubscription(string subscriber, AddSubscriptionModel addSubscriptionModel)
         {
-            var subscriber = await GetCurrentUsername();
+            var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
+            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = addSubscriptionModel.Author });
+            logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
+
+            if (subscriberExists == null || authorExists == null)
+                return NotFound("Accounts service unavailable");
+            if (subscriberExists.StatusCode != System.Net.HttpStatusCode.OK)
+                return NotFound("Subscriber doesn't exists");
+            if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
+                return NotFound("Author doesn't exists");
+
             var response = await subscriptionsService.AddSubscription(subscriber, addSubscriptionModel.Author);
             if (response != null)
             {
@@ -189,11 +216,22 @@ namespace Gateway.Controllers
             }
         }
 
-        [HttpDelete("subscriptions/{author}")]
+        [HttpDelete("{subscriber}/subscriptions/{author}")]
         [Authorize]
-        public async Task<IActionResult> RemoveSubscription(string author)
+        public async Task<IActionResult> RemoveSubscription(string subscriber, string author)
         {
-            var subscriber = await GetCurrentUsername();
+            var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
+            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = author });
+
+            logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
+
+            if (subscriberExists == null || authorExists == null)
+                return NotFound("Accounts service unavailable");
+            if (subscriberExists.StatusCode != System.Net.HttpStatusCode.OK)
+                return NotFound("Subscriber doesn't exists");
+            if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
+                return NotFound("Author doesn't exists");
+
             var response = await subscriptionsService.RemoveSubscription(subscriber, author);
             if (response != null)
             {
@@ -209,31 +247,6 @@ namespace Gateway.Controllers
                 logger.LogCritical("Subscriptions service unavailable");
                 return NotFound("Service unavailable");
             }
-        }
-
-        private async Task<string> Authorize()
-        {
-            ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>
-                {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, Guid.NewGuid().ToString())
-                }, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
-            if (HttpContext != null)
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-            return identity.Name;
-        }
-
-        private string GetCurrentCookie()
-        {
-            string cookie = User?.FindFirstValue(ClaimTypes.Name);
-            logger.LogInformation($"Requested current cookie, value: {cookie}");
-            return cookie;
-        }
-
-        private async Task<string> GetCurrentUsername()
-        {
-            string name = await accountsService.GetNameByClaim(GetCurrentCookie());
-            logger.LogInformation($"Requested current username, value: {name}");
-            return name;
         }
     }
 }
