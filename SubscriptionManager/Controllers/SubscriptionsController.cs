@@ -55,7 +55,7 @@ namespace SubscriptionManager.Controllers
                 return Ok();
             }
             logger.LogWarning($"Subscription {subscriber}-{author} already exists");
-            return BadRequest();
+            return BadRequest("Duplicate");
         }
 
         [HttpDelete("{subscriber}/{author}")]
