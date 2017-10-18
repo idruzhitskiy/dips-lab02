@@ -42,7 +42,7 @@ namespace Gateway.Controllers
         public async Task<IActionResult> Login(LoginModel loginModel)
         {
             var response = await accountsService.Login(loginModel);
-            logger.LogInformation($"Response from accounts service: {response.StatusCode}");
+            logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
 
             if (response?.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -69,7 +69,7 @@ namespace Gateway.Controllers
         public async Task<IActionResult> Register(UserModel userModel)
         {
             var response = await accountsService.Register(userModel);
-            logger.LogInformation($"Response from accounts service: {response.StatusCode}");
+            logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
 
             if (response?.StatusCode == System.Net.HttpStatusCode.OK)
             {
@@ -155,8 +155,16 @@ namespace Gateway.Controllers
             var user = await GetCurrentUsername();
             logger.LogInformation($"Requesting authors for user {user}");
             var authors = await subscriptionsService.GetSubscribedAuthorsForName(user, page, perpage);
-            logger.LogInformation($"Found {authors.Count()} authors for user {user}");
-            return authors;
+            if (authors != null)
+            {
+                logger.LogInformation($"Found {authors.Count()} authors for user {user}");
+                return authors;
+            }
+            else
+            {
+                logger.LogCritical("Subscriptions service unavailable");
+                return null;
+            }
         }
 
         [HttpPost("subscriptions")]

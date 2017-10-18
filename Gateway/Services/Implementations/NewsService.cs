@@ -16,7 +16,10 @@ namespace Gateway.Services.Implementations
 
         public async Task<List<string>> GetNewsForUser(string name, int page, int perpage)
         {
-            HttpResponseMessage httpResponseMessage = await Get($"{name.ToLowerInvariant()}?page={page}&perpage={perpage}");
+            var httpResponseMessage = await Get($"{name.ToLowerInvariant()}?page={page}&perpage={perpage}");
+            if (httpResponseMessage == null || httpResponseMessage.Content == null)
+                return null;
+
             string response = await httpResponseMessage.Content.ReadAsStringAsync();
             try
             {
@@ -24,13 +27,10 @@ namespace Gateway.Services.Implementations
             }
             catch
             {
-                return new List<string>();
+                return null;
             }
         }
 
-        public async Task<HttpResponseMessage> AddNews(NewsModel newsModel)
-        {
-            return await PostJson("", newsModel);
-        }
+        public async Task<HttpResponseMessage> AddNews(NewsModel newsModel) => await PostJson("", newsModel);
     }
 }

@@ -53,6 +53,16 @@ namespace Tests
         }
 
         [TestMethod]
+        public void TestLoginNoService()
+        {
+            accountsService = GetEmptyAccountsService();
+            var mainController = GetMainController();
+
+            var result = mainController.Login(Mock.Of<LoginModel>(lm => lm.Username == "User")).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
+        [TestMethod]
         public void TestRegisterValid()
         {
             accountsService = GetAccountsService(registerCode: HttpStatusCode.OK);
@@ -73,6 +83,16 @@ namespace Tests
         }
 
         [TestMethod]
+        public void TestRegosterNoService()
+        {
+            accountsService = GetEmptyAccountsService();
+            var mainController = GetMainController();
+
+            var result = mainController.Register(Mock.Of<UserModel>(lm => lm.Username == "User")).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
+        [TestMethod]
         public void TestGetNews()
         {
             var news = new List<string> { "news1", "news2" };
@@ -81,6 +101,15 @@ namespace Tests
 
             var result = mainController.GetNews().Result;
             Assert.AreEqual(news, result);
+        }
+
+        public void TestGetNewsNoService()
+        {
+            newsService = GetEmptyNewsService();
+            var mainController = GetMainController();
+
+            var result = mainController.GetNews().Result;
+            Assert.IsTrue(result == null);
         }
 
         [TestMethod]
@@ -104,6 +133,16 @@ namespace Tests
         }
 
         [TestMethod]
+        public void TestAddNewsNoService()
+        {
+            newsService = GetEmptyNewsService();
+            var mainController = GetMainController();
+
+            var result = mainController.AddNews(Mock.Of<NewsModel>()).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
+        [TestMethod]
         public void TestGetSubscribedAuthors()
         {
             var authors = new List<string> { "author1", "author2" };
@@ -112,6 +151,16 @@ namespace Tests
 
             var result = mainController.GetSubscribedAuthors().Result;
             Assert.AreEqual(result, authors);
+        }
+
+        [TestMethod]
+        public void TestGetSubscribedAuthorsNoService()
+        {
+            subscriptionsService = GetEmptySubscriptionsService();
+            var mainController = GetMainController();
+
+            var result = mainController.GetSubscribedAuthors().Result;
+            Assert.IsTrue(result == null);
         }
 
         [TestMethod]
@@ -135,6 +184,16 @@ namespace Tests
         }
 
         [TestMethod]
+        public void TestAddSubscriptionNoService()
+        {
+            subscriptionsService = GetEmptySubscriptionsService();
+            var mainController = GetMainController();
+
+            var result = mainController.AddSubscription(Mock.Of<AddSubscriptionModel>()).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
+        [TestMethod]
         public void TestRemoveSubscriptionValid()
         {
             subscriptionsService = GetSubscriptionsService(removeCode: HttpStatusCode.OK);
@@ -154,6 +213,16 @@ namespace Tests
             Assert.IsTrue(result is BadRequestObjectResult);
         }
 
+        [TestMethod]
+        public void TestRemoveSubscriptionNoService()
+        {
+            subscriptionsService = GetEmptySubscriptionsService();
+            var mainController = GetMainController();
+
+            var result = mainController.RemoveSubscription(string.Empty).Result;
+            Assert.IsTrue(result is NotFoundObjectResult);
+        }
+
         #region Support
         private ISubscriptionsService GetSubscriptionsService(List<string> authors = null, HttpStatusCode addCode = HttpStatusCode.OK, HttpStatusCode removeCode = HttpStatusCode.OK)
         {
@@ -161,18 +230,6 @@ namespace Tests
                 srv.GetSubscribedAuthorsForName(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()) == Task.FromResult(authors) &&
                 srv.AddSubscription(It.IsAny<string>(), It.IsAny<string>()) == Task.FromResult(GetResponseMessage(addCode)) &&
                 srv.RemoveSubscription(It.IsAny<string>(), It.IsAny<string>()) == Task.FromResult(GetResponseMessage(removeCode)));
-        }
-
-        private INewsService GetNewsService(List<string> getNewsContent = null, HttpStatusCode addNewsCode = HttpStatusCode.OK)
-        {
-            return Mock.Of<INewsService>(srv =>
-                srv.GetNewsForUser(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()) == Task.FromResult(getNewsContent) &&
-                srv.AddNews(It.IsAny<NewsModel>()) == Task.FromResult(GetResponseMessage(addNewsCode)));
-        }
-
-        private MainController GetMainController()
-        {
-            return new MainController(logger, accountsService, subscriptionsService, newsService);
         }
 
         private IAccountsService GetAccountsService(HttpStatusCode loginCode = HttpStatusCode.OK,
@@ -183,6 +240,33 @@ namespace Tests
                 srv.Login(It.IsAny<LoginModel>()) == Task.FromResult(GetResponseMessage(loginCode)) &&
                 srv.Register(It.IsAny<UserModel>()) == Task.FromResult(GetResponseMessage(registerCode)) &&
                 srv.GetNameByClaim(It.IsAny<string>()) == Task.FromResult(currentUsername));
+        }
+
+        private INewsService GetNewsService(List<string> getNewsContent = null, HttpStatusCode addNewsCode = HttpStatusCode.OK)
+        {
+            return Mock.Of<INewsService>(srv =>
+                srv.GetNewsForUser(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()) == Task.FromResult(getNewsContent) &&
+                srv.AddNews(It.IsAny<NewsModel>()) == Task.FromResult(GetResponseMessage(addNewsCode)));
+        }
+
+        private IAccountsService GetEmptyAccountsService()
+        {
+            return Mock.Of<IAccountsService>();
+        }
+
+        private INewsService GetEmptyNewsService()
+        {
+            return Mock.Of<INewsService>();
+        }
+
+        private ISubscriptionsService GetEmptySubscriptionsService()
+        {
+            return Mock.Of<ISubscriptionsService>();
+        }
+
+        private MainController GetMainController()
+        {
+            return new MainController(logger, accountsService, subscriptionsService, newsService);
         }
 
         private HttpResponseMessage GetResponseMessage(HttpStatusCode registerCode)

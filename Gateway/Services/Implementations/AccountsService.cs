@@ -28,9 +28,11 @@ namespace Gateway.Services.Implementations
 
         public async Task<string> GetNameByClaim(string claim)
         {
-            return await (await PutForm("claim", new Dictionary<string, string> { { "claim", claim } }))
-                .Content
-                .ReadAsStringAsync();
+            var httpResponseMessage = await PutForm("claim", new Dictionary<string, string> { { "claim", claim } });
+            if (httpResponseMessage != null && httpResponseMessage.Content != null)
+                return await httpResponseMessage.Content.ReadAsStringAsync();
+            else
+                return null;
         }
 
         public async Task<HttpResponseMessage> RemoveClaim(string claim) => await Get("claim/{claim}");
