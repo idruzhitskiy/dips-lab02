@@ -22,6 +22,8 @@ namespace Tests
     public class NewsStorageTests
     {
         private const string username = "User";
+        private const string header = "Header";
+
         private ILogger<NewsController> logger;
         private ISubscriptionsService subscriptionsService;
         private ApplicationDbContext dbContext;
@@ -65,6 +67,17 @@ namespace Tests
             var result = newsController.AddNews(Mock.Of<NewsModel>(nm => nm.Author == username)).Result;
             Assert.IsTrue(result is OkResult);
             Assert.IsTrue(news.First().Author == username);
+        }
+
+        [TestMethod]
+        public void TestAddNewsNotValid()
+        {
+            var news = new List<News> { new News { Author = username, Header = header } };
+            dbContext = GetDbContext(news);
+            var newsController = GetNewsController();
+
+            var result = newsController.AddNews(Mock.Of<NewsModel>(nm => nm.Author == username && nm.Header == header)).Result;
+            Assert.IsFalse(result is OkResult);
         }
 
         #region Support
