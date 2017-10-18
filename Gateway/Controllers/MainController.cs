@@ -47,7 +47,6 @@ namespace Gateway.Controllers
             if (response?.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 logger.LogInformation("Adding claim");
-                //response = await accountsService.AddClaim(userModel.Username, await Authorize());
                 logger.LogInformation($"Adding claim response: {response?.StatusCode}");
                 return Ok();
             }
