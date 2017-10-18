@@ -10,6 +10,7 @@ namespace NewsStorage
     public class ApplicationDbContext : DbContext
     {
         public DbSet<News> News { get; set; }
+        public ApplicationDbContext() : base() { }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> ops) : base(ops) { }
     }
 }

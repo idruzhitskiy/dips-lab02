@@ -10,6 +10,7 @@ namespace SubscriptionManager
     public class ApplicationDbContext : DbContext
     {
         public DbSet<Subscription> Subscriptions { get; set; }
+        public ApplicationDbContext() : base() { }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> ops) : base(ops) { }
     }
 }

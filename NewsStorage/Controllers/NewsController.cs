@@ -32,41 +32,48 @@ namespace NewsStorage.Controllers
         {
             logger.LogDebug($"Retrieving news for user {name}");
             var authors = await subscriptionsService.GetSubscribedAuthorsForName(name, 0, 0);
-            logger.LogDebug($"Authors for user {name}: {string.Join(", ", authors)} ({authors.Count})");
-            var news = db.News.Where(n => authors.Contains(n.Author));
-            logger.LogDebug($"Found {news.Count()} news for user {name}");
-            news = news.OrderByDescending(n => n.Date);
-            if (perpage != 0 && page != 0)
+            if (authors != null && authors.Count > 0)
             {
-                logger.LogDebug($"Skipping {perpage * page} news due to pagination");
-                news = news.Skip(perpage * page);
+                logger.LogDebug($"Authors for user {name}: {string.Join(", ", authors)} ({authors?.Count})");
+                var news = db.News.Where(n => authors.Contains(n.Author));
+                logger.LogDebug($"Found {news.Count()} news for user {name}");
+                news = news.OrderByDescending(n => n.Date);
+                if (perpage != 0 && page != 0)
+                {
+                    logger.LogDebug($"Skipping {perpage * page} news due to pagination");
+                    news = news.Skip(perpage * page);
+                }
+                if (perpage != 0)
+                {
+                    logger.LogDebug($"Retrieving at max {perpage} news");
+                    news = news.Take(perpage);
+                }
+                logger.LogDebug($"Returning {news.Count()} news");
+                return news.Select(n => $"Header: {n.Header}{Environment.NewLine}Body: {n.Body}{Environment.NewLine}Author: {n.Author}")
+                    .ToList();
             }
-            if (perpage != 0)
-            {
-                logger.LogDebug($"Retrieving at max {perpage} news");
-                news = news.Take(perpage);
-            }
-            logger.LogDebug($"Returning {news.Count()} news");
-            return news.Select(n => $"{n.Header}\n{n.Body}\n{n.Author}")
-                .ToList();
+            logger.LogWarning($"No subscribed authors found for user {name}");
+            return new List<string>();
         }
 
         [HttpPost("")]
         public async Task<IActionResult> AddNews([FromBody] NewsModel newsModel)
         {
-            logger.LogDebug($"Adding news, author: {newsModel.Author}");
-            var news = new News(newsModel);
-            news.Date = DateTime.Now;
-            var state = (await db.News.AddAsync(news)).State;
-            if (state == EntityState.Added)
+            var prevNews = db.News.FirstOrDefault(n => n.Author == newsModel.Author && n.Header == newsModel.Header);
+            if (prevNews == null)
             {
-                logger.LogDebug($"News added");
+                logger.LogDebug($"Adding news, author: {newsModel.Author}");
+                var state = db.News.Add(new News(newsModel)
+                {
+                    Date = DateTime.Now
+                })?.State;
+                logger.LogDebug($"News addition result: {state}");
                 db.SaveChanges();
                 return Ok();
             }
             else
             {
-                logger.LogWarning($"Adding news failed, result: {state}");
+                logger.LogWarning($"News already exists");
                 return BadRequest();
             }
         }

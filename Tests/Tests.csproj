@@ -17,6 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Authentication\Authentication.csproj" />
     <ProjectReference Include="..\Gateway\Gateway.csproj" />
+    <ProjectReference Include="..\NewsStorage\NewsStorage.csproj" />
+    <ProjectReference Include="..\SubscriptionManager\SubscriptionManager.csproj" />
   </ItemGroup>
 
   <ItemGroup>

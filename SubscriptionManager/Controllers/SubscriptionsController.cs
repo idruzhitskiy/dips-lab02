@@ -44,16 +44,17 @@ namespace SubscriptionManager.Controllers
         [HttpPost("{subscriber}")]
         public async Task<IActionResult> AddSubscription(string subscriber, string author)
         {
-            logger.LogDebug($"Adding subscription: {subscriber} subscribes on feed of {author}");
-            var subscription = new Subscription { Subscriber = subscriber.ToLowerInvariant(), Author = author.ToLowerInvariant() };
-            var state = (await db.Subscriptions.AddAsync(subscription)).State;
-            if (state == EntityState.Added)
+            var prevSubscription = db.Subscriptions.FirstOrDefault(s => s.Subscriber == subscriber.ToLowerInvariant() && s.Author == author.ToLowerInvariant());
+            if (prevSubscription == null)
             {
-                logger.LogDebug($"Subscription {subscriber}-{author} added");
+                logger.LogDebug($"Adding subscription: {subscriber} subscribes on feed of {author}");
+                var subscription = new Subscription { Subscriber = subscriber.ToLowerInvariant(), Author = author.ToLowerInvariant() };
+                var state = db.Subscriptions.Add(subscription)?.State;
+                logger.LogDebug($"Subscription {subscriber}-{author} added with state {state}");
                 db.SaveChanges();
                 return Ok();
             }
-            logger.LogWarning($"Subscription failed to add, result: {state}");
+            logger.LogWarning($"Subscription {subscriber}-{author} already exists");
             return BadRequest();
         }
 
@@ -61,21 +62,16 @@ namespace SubscriptionManager.Controllers
         public async Task<IActionResult> RemoveSubscription(string subscriber, string author)
         {
             logger.LogDebug($"Removing subscription {subscriber}-{author}");
-            var subscription = await db.Subscriptions.FirstOrDefaultAsync(s => s.Subscriber.ToLowerInvariant() == subscriber.ToLowerInvariant() && s.Author.ToLowerInvariant() == author.ToLowerInvariant());
+            var subscription = db.Subscriptions.FirstOrDefault(s => s.Subscriber == subscriber.ToLowerInvariant() && s.Author == author.ToLowerInvariant());
             if (subscription != null)
             {
                 logger.LogDebug($"Subscription {subscriber}-{author} exists in database");
-                var state = db.Subscriptions.Remove(subscription).State;
-                if (state == EntityState.Deleted)
-                {
-                    logger.LogDebug($"Subscription {subscriber}-{author} removed");
-                    db.SaveChanges();
-                    return Ok();
-                }
-                logger.LogWarning($"Subscription {subscriber}-{author} failed to remove, result: {state}");
+                var state = db.Subscriptions.Remove(subscription)?.State;
+                logger.LogDebug($"Subscription {subscriber}-{author} removed with state {state}");
+                db.SaveChanges();
+                return Ok();
             }
-            else
-                logger.LogWarning($"Subscription {subscriber}-{author} not found");
+            logger.LogWarning($"Subscription {subscriber}-{author} not found");
             return BadRequest();
         }
     }
