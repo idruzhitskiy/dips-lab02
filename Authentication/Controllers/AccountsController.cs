@@ -31,7 +31,7 @@ namespace Authentication.Controllers
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
             logger.LogDebug($"Login request, username: {loginModel.Username}");
-            User user = await db.Users.FirstOrDefaultAsync(u => u.Name == loginModel.Username && u.Password == loginModel.Password);
+            User user = db.Users.FirstOrDefault(u => u.Name == loginModel.Username && u.Password == loginModel.Password);
             if (user != null)
             {
                 logger.LogDebug($"User {user.Name} found");
@@ -45,13 +45,13 @@ namespace Authentication.Controllers
         public async Task<IActionResult> Register([FromBody] UserModel userModel)
         {
             logger.LogDebug($"Register request, username: {userModel.Username}");
-            User user = await db.Users.FirstOrDefaultAsync(u => u.Name == userModel.Username && u.Password == userModel.Password);
+            User user = db.Users.FirstOrDefault(u => u.Name == userModel.Username && u.Password == userModel.Password);
             if (user == null)
             {
                 logger.LogDebug($"Registering user {userModel.Username}");
-                var result = await db.Users.AddAsync(new User(userModel));
-                logger.LogDebug($"User {userModel.Username} add result: {result.State}");
-                await db.SaveChangesAsync();
+                var result = db.Users.Add(new User(userModel));
+                logger.LogDebug($"User {userModel.Username} add result: {result?.State}");
+                db.SaveChanges();
                 return Ok();
             }
             logger.LogWarning($"User {userModel.Username} already exists");
@@ -62,12 +62,12 @@ namespace Authentication.Controllers
         public async Task<IActionResult> AddClaim(string name, string claim)
         {
             logger.LogDebug($"Adding claim {claim} to user {name}");
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Name == name);
+            var user = db.Users.FirstOrDefault(u => u.Name == name);
             if (user != null)
             {
                 user.AddClaim(claim);
                 var result = db.Users.Update(user);
-                logger.LogDebug($"User {name} modification result: {result.State}");
+                logger.LogDebug($"User {name} modification result: {result?.State}");
                 db.SaveChanges();
                 return Ok();
             }
@@ -79,7 +79,7 @@ namespace Authentication.Controllers
         public async Task<string> GetNameByClaim(string claim)
         {
             logger.LogDebug($"Retrieving name for claim {claim}");
-            var user = await db.Users.FirstOrDefaultAsync(u => u.ContainsClaim(claim));
+            var user = db.Users.FirstOrDefault(u => u.ContainsClaim(claim));
             if (user == null)
                 logger.LogWarning($"User with claim {claim} not found");
             else
@@ -91,12 +91,12 @@ namespace Authentication.Controllers
         public async Task<IActionResult> RemoveClaim(string claim)
         {
             logger.LogDebug($"Removing claim {claim}");
-            var user = await db.Users.FirstOrDefaultAsync(u => u.ContainsClaim(claim));
+            var user = db.Users.FirstOrDefault(u => u.ContainsClaim(claim));
             if (user != null)
             {
                 user.RemoveClaim(claim);
                 var result = db.Users.Update(user);
-                logger.LogDebug($"User {user.Name} modification result: {result.State}");
+                logger.LogDebug($"User {user.Name} modification result: {result?.State}");
                 db.SaveChanges();
                 return Ok();
             }

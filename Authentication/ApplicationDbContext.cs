@@ -14,6 +14,7 @@ namespace Authentication
     public class ApplicationDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public ApplicationDbContext() : base() { }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> ops) : base(ops) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
