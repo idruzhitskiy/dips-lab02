@@ -53,6 +53,19 @@ namespace Gateway.Services.Implementations
             }
         }
 
-        public async Task<HttpResponseMessage> RemoveAllAssociatedSubscriptions(string username) => await Delete($"all/{username}");
+        public async Task<List<Tuple<string, string>>> RemoveAllAssociatedSubscriptions(string username)
+        {
+            var httpResponseMessage = await Delete($"all/{username}");
+            if (httpResponseMessage == null || httpResponseMessage.Content == null)
+                return null;
+            try
+            {
+                return JsonConvert.DeserializeObject<List<Tuple<string, string>>>(await httpResponseMessage.Content.ReadAsStringAsync());
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

@@ -65,37 +65,29 @@ namespace Gateway.Controllers
         [HttpDelete("user/{username}")]
         public async Task<IActionResult> DeleteUser(string username)
         {
-            var accountsServiceOnline = await accountsService.CheckIfUserExists(new ExistsModel { Username = username });
-            var newsServiceOnline = await newsService.GetNewsByUser(username, 0, 1);
-            var subscriptionsServiceOnline = await subscriptionsService.GetAllAssociatedSubscriptions(username, 0, 1);
-            if (accountsServiceOnline == null ||
-                newsServiceOnline == null ||
-                subscriptionsService == null)
+            var accountsServerResult = await accountsService.DeleteUser(username);
+            if (accountsServerResult == null)
             {
-                logger.LogCritical($"One of the services is unavailable, AS status: {(accountsServiceOnline != null ? "online" : "offline")}, " +
-                    $"NS status: {(newsServiceOnline != null ? "online" : "offline")}, SS status: {(subscriptionsServiceOnline != null ? "online" : "offline")}");
-                return StatusCode(503);
+                return StatusCode(503, "Accounts service unavailable");
             }
-            var resultMessage = string.Empty;
-            var opResult = await accountsService.DeleteUser(username);
-            logger.LogDebug($"Removing user {username}, status: {opResult.StatusCode}");
-            if (opResult.StatusCode != System.Net.HttpStatusCode.OK)
-                resultMessage += $"Error removing user: {opResult.Content?.ReadAsStringAsync().Result};";
 
-            opResult = await newsService.DeleteNewsWithAuthor(username);
-            logger.LogDebug($"Removing news with author {username}, status: {opResult.StatusCode}");
-            if (opResult.StatusCode != System.Net.HttpStatusCode.OK)
-                resultMessage += $"Error removing news: {opResult.Content?.ReadAsStringAsync().Result};";
+            var newsServerResult = await newsService.DeleteNewsWithAuthor(username);
+            if (newsServerResult == null)
+            {
+                var result = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true;
+                return StatusCode(503, $"News service unavailable, rollback status: Acc - {(result ? "ok" : "failed")}");
+            }
 
-            opResult = await subscriptionsService.RemoveAllAssociatedSubscriptions(username);
-            logger.LogDebug($"Removing subscriptions associated with {username}, status: {opResult.StatusCode}");
-            if (opResult.StatusCode != System.Net.HttpStatusCode.OK)
-                resultMessage += $"Error removing news: {opResult.Content?.ReadAsStringAsync().Result};";
-
-            if (string.IsNullOrWhiteSpace(resultMessage))
-                return Ok();
-            else
-                return StatusCode(500, resultMessage);
+            var subscriptionsServerResult = await subscriptionsService.RemoveAllAssociatedSubscriptions(username);
+            if (subscriptionsServerResult == null)
+            {
+                var resultNews = true;
+                foreach (var news in newsServerResult)
+                    resultNews &= (await newsService.AddNews(news))?.IsSuccessStatusCode == true;
+                var resultAccounts = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true ;
+                return StatusCode(503, $"News service unavailable, rollback status: Acc - { (resultAccounts ? "ok" : "failed")}, News - {(resultNews ? "ok" : "failed")}");
+            }
+            return Ok();
         }
 
         [HttpGet("{name}/news")]
@@ -125,7 +117,6 @@ namespace Gateway.Controllers
         {
             var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = news.Author });
             logger.LogInformation($"Author response: {authorExists?.StatusCode}");
-
             if (authorExists == null)
                 return NotFound("Accounts service unavailable");
             if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
@@ -174,7 +165,7 @@ namespace Gateway.Controllers
         public async Task<IActionResult> AddSubscription(string subscriber, string author)
         {
             var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
-            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = author});
+            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = author });
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
 
             if (subscriberExists == null || authorExists == null)

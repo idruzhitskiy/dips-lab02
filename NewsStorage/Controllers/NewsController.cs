@@ -63,10 +63,9 @@ namespace NewsStorage.Controllers
             if (prevNews == null)
             {
                 logger.LogDebug($"Adding news, author: {newsModel.Author}");
-                var state = db.News.Add(new News(newsModel)
-                {
-                    Date = DateTime.Now
-                })?.State;
+                if (newsModel.Date == null)
+                    newsModel.Date = DateTime.Now;
+                var state = db.News.Add(new News(newsModel))?.State;
                 logger.LogDebug($"News addition result: {state}");
                 db.SaveChanges();
                 return Ok();
@@ -110,7 +109,7 @@ namespace NewsStorage.Controllers
                 db.News.RemoveRange(news);
                 db.SaveChanges();
             }
-            return Ok();
+            return Ok(news.Select(n => new NewsModel { Author = n.Author, Body = n.Body, Date = n.Date, Header = n.Header }).ToList());
         }
 
     }

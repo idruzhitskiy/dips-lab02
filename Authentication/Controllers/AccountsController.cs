@@ -68,7 +68,7 @@ namespace Authentication.Controllers
                 var result = db.Users.Remove(user);
                 logger.LogDebug($"User {user.Name} removed result: {result?.State}");
                 db.SaveChanges();
-                return Ok();
+                return Ok(new RegisterModel { Username = user.Name });
             }
             logger.LogWarning($"User {username} not found");
             return NotFound();

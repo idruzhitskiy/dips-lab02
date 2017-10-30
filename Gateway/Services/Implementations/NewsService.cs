@@ -50,6 +50,21 @@ namespace Gateway.Services.Implementations
             }
         }
 
-        public async Task<HttpResponseMessage> DeleteNewsWithAuthor(string username) => await Delete($"author/{username}");
+        public async Task<List<NewsModel>> DeleteNewsWithAuthor(string username)
+        {
+            var httpResponseMessage = await Delete($"author/{username}");
+            if (httpResponseMessage == null || httpResponseMessage.Content == null)
+                return null;
+
+            string response = await httpResponseMessage.Content.ReadAsStringAsync();
+            try
+            {
+                return JsonConvert.DeserializeObject<List<NewsModel>>(response);
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

@@ -12,6 +12,6 @@ namespace Gateway.Services
         Task<HttpResponseMessage> AddSubscription(string subscriber, string author);
         Task<HttpResponseMessage> RemoveSubscription(string subscriber, string author);
         Task<List<string>> GetAllAssociatedSubscriptions(string username, int page, int perpage);
-        Task<HttpResponseMessage> RemoveAllAssociatedSubscriptions(string username);
+        Task<List<Tuple<string, string>>> RemoveAllAssociatedSubscriptions(string username);
     }
 }

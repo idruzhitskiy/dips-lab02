@@ -11,6 +11,6 @@ namespace Gateway.Services
     {
         Task<HttpResponseMessage> CheckIfUserExists(ExistsModel existsModel);
         Task<HttpResponseMessage> Register(RegisterModel userModel);
-        Task<HttpResponseMessage> DeleteUser(string username);
+        Task<RegisterModel> DeleteUser(string username);
     }
 }

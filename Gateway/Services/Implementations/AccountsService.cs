@@ -21,6 +21,21 @@ namespace Gateway.Services.Implementations
 
         public async Task<HttpResponseMessage> Register(RegisterModel userModel) => await PostJson("register", userModel);
 
-        public async Task<HttpResponseMessage> DeleteUser(string username) => await Delete(username);
+        public async Task<RegisterModel> DeleteUser(string username)
+        {
+            var httpResponseMessage = await Delete(username);
+            if (httpResponseMessage == null || httpResponseMessage.Content == null)
+                return null;
+
+            string response = await httpResponseMessage.Content.ReadAsStringAsync();
+            try
+            {
+                return JsonConvert.DeserializeObject<RegisterModel>(response);
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }
