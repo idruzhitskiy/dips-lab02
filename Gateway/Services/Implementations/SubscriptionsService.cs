@@ -37,5 +37,22 @@ namespace Gateway.Services.Implementations
         {
             return await Delete($"{subscriber}/{author}");
         }
+
+        public async Task<List<string>> GetAllAssociatedSubscriptions(string username, int page, int perpage)
+        {
+            var httpResponseMessage = await Get($"all/{username}?page={page}&perpage={perpage}");
+            if (httpResponseMessage == null || httpResponseMessage.Content == null)
+                return null;
+            try
+            {
+                return JsonConvert.DeserializeObject<List<string>>(await httpResponseMessage.Content.ReadAsStringAsync());
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<HttpResponseMessage> RemoveAllAssociatedSubscriptions(string username) => await Delete($"all/{username}");
     }
 }

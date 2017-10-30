@@ -21,20 +21,6 @@ namespace Gateway.Services.Implementations
 
         public async Task<HttpResponseMessage> Register(RegisterModel userModel) => await PostJson("register", userModel);
 
-        public async Task<HttpResponseMessage> AddClaim(string name, string claim)
-        {
-            return await PostForm("claim", new Dictionary<string, string> { { "name", name }, { "claim", claim } });
-        }
-
-        public async Task<string> GetNameByClaim(string claim)
-        {
-            var httpResponseMessage = await PutForm("claim", new Dictionary<string, string> { { "claim", claim } });
-            if (httpResponseMessage != null && httpResponseMessage.Content != null)
-                return await httpResponseMessage.Content.ReadAsStringAsync();
-            else
-                return null;
-        }
-
-        public async Task<HttpResponseMessage> RemoveClaim(string claim) => await Get("claim/{claim}");
+        public async Task<HttpResponseMessage> DeleteUser(string username) => await Delete(username);
     }
 }

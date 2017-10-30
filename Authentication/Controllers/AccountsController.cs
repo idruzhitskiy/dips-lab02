@@ -57,5 +57,21 @@ namespace Authentication.Controllers
             logger.LogWarning($"User {userModel.Username} already exists");
             return BadRequest("Duplicate");
         }
+
+        [HttpDelete("{username}")]
+        public async Task<IActionResult> DeleteUser(string username)
+        {
+            var user = db.Users.FirstOrDefault(u => u.Name == username);
+            if (user != null)
+            {
+                logger.LogDebug($"Removing user {username}");
+                var result = db.Users.Remove(user);
+                logger.LogDebug($"User {user.Name} removed result: {result?.State}");
+                db.SaveChanges();
+                return Ok();
+            }
+            logger.LogWarning($"User {username} not found");
+            return NotFound();
+        }
     }
 }

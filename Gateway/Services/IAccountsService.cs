@@ -11,8 +11,6 @@ namespace Gateway.Services
     {
         Task<HttpResponseMessage> CheckIfUserExists(ExistsModel existsModel);
         Task<HttpResponseMessage> Register(RegisterModel userModel);
-        Task<HttpResponseMessage> AddClaim(string name, string claim);
-        Task<string> GetNameByClaim(string claim);
-        Task<HttpResponseMessage> RemoveClaim(string claim);
+        Task<HttpResponseMessage> DeleteUser(string username);
     }
 }

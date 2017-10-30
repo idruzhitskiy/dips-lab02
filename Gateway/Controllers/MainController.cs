@@ -37,7 +37,7 @@ namespace Gateway.Controllers
             this.newsService = newsService;
         }
 
-        [HttpPost("register")]
+        [HttpPost("user")]
         public async Task<IActionResult> Register(RegisterModel userModel)
         {
             var response = await accountsService.Register(userModel);
@@ -61,7 +61,43 @@ namespace Gateway.Controllers
                 return NotFound("Service unavailable");
             }
         }
-        
+
+        [HttpDelete("user/{username}")]
+        public async Task<IActionResult> DeleteUser(string username)
+        {
+            var accountsServiceOnline = await accountsService.CheckIfUserExists(new ExistsModel { Username = username });
+            var newsServiceOnline = await newsService.GetNewsByUser(username, 0, 1);
+            var subscriptionsServiceOnline = await subscriptionsService.GetAllAssociatedSubscriptions(username, 0, 1);
+            if (accountsServiceOnline == null ||
+                newsServiceOnline == null ||
+                subscriptionsService == null)
+            {
+                logger.LogCritical($"One of the services is unavailable, AS status: {(accountsServiceOnline != null ? "online" : "offline")}, " +
+                    $"NS status: {(newsServiceOnline != null ? "online" : "offline")}, SS status: {(subscriptionsServiceOnline != null ? "online" : "offline")}");
+                return StatusCode(503);
+            }
+            var resultMessage = string.Empty;
+            var opResult = await accountsService.DeleteUser(username);
+            logger.LogDebug($"Removing user {username}, status: {opResult.StatusCode}");
+            if (opResult.StatusCode != System.Net.HttpStatusCode.OK)
+                resultMessage += $"Error removing user: {opResult.Content?.ReadAsStringAsync().Result};";
+
+            opResult = await newsService.DeleteNewsWithAuthor(username);
+            logger.LogDebug($"Removing news with author {username}, status: {opResult.StatusCode}");
+            if (opResult.StatusCode != System.Net.HttpStatusCode.OK)
+                resultMessage += $"Error removing news: {opResult.Content?.ReadAsStringAsync().Result};";
+
+            opResult = await subscriptionsService.RemoveAllAssociatedSubscriptions(username);
+            logger.LogDebug($"Removing subscriptions associated with {username}, status: {opResult.StatusCode}");
+            if (opResult.StatusCode != System.Net.HttpStatusCode.OK)
+                resultMessage += $"Error removing news: {opResult.Content?.ReadAsStringAsync().Result};";
+
+            if (string.IsNullOrWhiteSpace(resultMessage))
+                return Ok();
+            else
+                return StatusCode(500, resultMessage);
+        }
+
         [HttpGet("{name}/news")]
         public async Task<List<string>> GetNews(string name, int page = 0, int perpage = 0)
         {

@@ -77,5 +77,41 @@ namespace NewsStorage.Controllers
                 return BadRequest();
             }
         }
+
+        [HttpGet("author/{name}")]
+        public async Task<List<string>> GetNewsByUser(string name, int page, int perpage)
+        {
+            logger.LogDebug($"Retrieving news by user {name}");
+            var news = db.News.Where(n => n.Author == name);
+            logger.LogDebug($"Found {news.Count()} news by user {name}");
+            news = news.OrderByDescending(n => n.Date);
+            if (perpage != 0 && page != 0)
+            {
+                logger.LogDebug($"Skipping {perpage * page} news due to pagination");
+                news = news.Skip(perpage * page);
+            }
+            if (perpage != 0)
+            {
+                logger.LogDebug($"Retrieving at max {perpage} news");
+                news = news.Take(perpage);
+            }
+            logger.LogDebug($"Returning {news.Count()} news");
+            return news.Select(n => $"Header: {n.Header}{Environment.NewLine}Body: {n.Body}{Environment.NewLine}Author: {n.Author}")
+                .ToList();
+        }
+
+        [HttpDelete("author/{name}")]
+        public async Task<IActionResult> DeleteNewsByUser(string name)
+        {
+            var news = db.News.Where(n => n.Author == name);
+            logger.LogDebug($"News by {name} count: {news.Count()}");
+            if (news.Count() > 0)
+            {
+                db.News.RemoveRange(news);
+                db.SaveChanges();
+            }
+            return Ok();
+        }
+
     }
 }
