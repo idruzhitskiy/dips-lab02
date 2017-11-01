@@ -25,7 +25,7 @@ namespace SubscriptionManager.Controllers
         public async Task<List<string>> GetAuthorsForName(string subscriber, int page, int perpage)
         {
             logger.LogDebug($"Retriving subscriptions for user {subscriber}");
-            var result = db.Subscriptions.Where(s => s.Subscriber.ToLowerInvariant() == subscriber.ToLowerInvariant());
+            var result = db.Subscriptions.Where(s => s.Subscriber == subscriber);
             logger.LogDebug($"Found {result.Count()} authors for user {subscriber}");
             if (page != 0 && perpage != 0)
             {
@@ -44,11 +44,11 @@ namespace SubscriptionManager.Controllers
         [HttpPost("{subscriber}")]
         public async Task<IActionResult> AddSubscription(string subscriber, string author)
         {
-            var prevSubscription = db.Subscriptions.FirstOrDefault(s => s.Subscriber == subscriber.ToLowerInvariant() && s.Author == author.ToLowerInvariant());
+            var prevSubscription = db.Subscriptions.FirstOrDefault(s => s.Subscriber == subscriber && s.Author == author);
             if (prevSubscription == null)
             {
                 logger.LogDebug($"Adding subscription: {subscriber} subscribes on feed of {author}");
-                var subscription = new Subscription { Subscriber = subscriber.ToLowerInvariant(), Author = author.ToLowerInvariant() };
+                var subscription = new Subscription { Subscriber = subscriber, Author = author };
                 var state = db.Subscriptions.Add(subscription)?.State;
                 logger.LogDebug($"Subscription {subscriber}-{author} added with state {state}");
                 db.SaveChanges();
@@ -62,7 +62,7 @@ namespace SubscriptionManager.Controllers
         public async Task<IActionResult> RemoveSubscription(string subscriber, string author)
         {
             logger.LogDebug($"Removing subscription {subscriber}-{author}");
-            var subscription = db.Subscriptions.FirstOrDefault(s => s.Subscriber == subscriber.ToLowerInvariant() && s.Author == author.ToLowerInvariant());
+            var subscription = db.Subscriptions.FirstOrDefault(s => s.Subscriber == subscriber && s.Author == author);
             if (subscription != null)
             {
                 logger.LogDebug($"Subscription {subscriber}-{author} exists in database");
@@ -73,6 +73,72 @@ namespace SubscriptionManager.Controllers
             }
             logger.LogWarning($"Subscription {subscriber}-{author} not found");
             return BadRequest();
+        }
+
+        [HttpGet("all/{name}")]
+        public async Task<List<string>> GetAllAssociatedSubscriptions(string name, int page, int perpage)
+        {
+            var subscriptions = db.Subscriptions.Where(s => s.Subscriber == name || s.Author == name);
+            logger.LogDebug($"Found {subscriptions.Count()} associated with user {name}");
+            subscriptions = subscriptions.OrderBy(s => s.Author);
+            if (page != 0 && perpage != 0)
+            {
+                logger.LogDebug($"Skipping {page * perpage} entities due to pagination");
+                subscriptions = subscriptions.Skip(page * perpage);
+            }
+            if (perpage != 0)
+            {
+                logger.LogDebug($"Taking at max {perpage} entities");
+                subscriptions = subscriptions.Take(perpage);
+            }
+            logger.LogDebug($"Retrieved {subscriptions.Count()}");
+            return subscriptions.Select(s => $"{s.Subscriber} subscribed to {s.Author}").ToList();
+        }
+
+        [HttpDelete("all/{name}")]
+        public async Task<IActionResult> RemoveAllAssociatedSubscriptions(string name)
+        {
+            var subscriptions = db.Subscriptions.Where(s => s.Author == name || s.Subscriber == name);
+            logger.LogDebug($"Found {subscriptions.Count()} associated with user {name}");
+            if (subscriptions.Count() > 0)
+            {
+                db.Subscriptions.RemoveRange(subscriptions);
+                db.SaveChanges();
+            }
+            return Ok();
+        }
+
+        [HttpPut("user/{username}")]
+        public async Task<IActionResult> ChangeUserName(string username, string newUsername)
+        {
+            string message = string.Empty;
+            var subscriptions = db.Subscriptions.Where(s => s.Author == username || s.Subscriber == username);
+            if (subscriptions.Any())
+            {
+                var otherUserSubscriptions = db.Subscriptions.Where(s => s.Author == newUsername || s.Subscriber == newUsername);
+                if (!otherUserSubscriptions.Any())
+                {
+                    foreach (var subscription in subscriptions)
+                    {
+                        if (subscription.Author == username)
+                            subscription.Author = newUsername;
+                        if (subscription.Subscriber == username)
+                            subscription.Subscriber = newUsername;
+                    }
+
+                    db.Subscriptions.UpdateRange(subscriptions);
+                    db.SaveChanges();
+                }
+                else
+                    message = $"Subscriptions for/by user with username {newUsername} already exists";
+            }
+            else
+                message = $"Subscriptions for/by user with username {username} not found";
+
+            logger.LogDebug(message);
+            if (string.IsNullOrWhiteSpace(message))
+                return Ok();
+            return StatusCode(500, message);
         }
     }
 }

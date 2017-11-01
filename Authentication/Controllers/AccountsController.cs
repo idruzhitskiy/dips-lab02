@@ -57,5 +57,49 @@ namespace Authentication.Controllers
             logger.LogWarning($"User {userModel.Username} already exists");
             return BadRequest("Duplicate");
         }
+
+        [HttpDelete("{username}")]
+        public async Task<IActionResult> DeleteUser(string username)
+        {
+            var user = db.Users.FirstOrDefault(u => u.Name == username);
+            if (user != null)
+            {
+                logger.LogDebug($"Removing user {username}");
+                var result = db.Users.Remove(user);
+                logger.LogDebug($"User {user.Name} removed result: {result?.State}");
+                db.SaveChanges();
+                return Ok(new RegisterModel { Username = user.Name });
+            }
+            logger.LogWarning($"User {username} not found");
+            return NotFound();
+        }
+
+        [HttpPut("user/{username}")]
+        public async Task<IActionResult> ChangeUserName(string username, string newUsername)
+        {
+            string message = string.Empty;
+
+            var user = db.Users.FirstOrDefault(u => u.Name == username);
+            if (user != null)
+            {
+                var otherUser = db.Users.FirstOrDefault(u => u.Name == newUsername);
+                if (otherUser == null)
+                {
+                    user.Name = newUsername;
+                    var result = db.Users.Update(user);
+                    logger.LogDebug($"User {user.Name} update result: {result?.State}");
+                    db.SaveChanges();
+                }
+                else
+                    message = $"User with username {newUsername} already exists";
+            }
+            else
+                message = $"User with username {username} not found";
+
+            logger.LogDebug(message);
+            if (string.IsNullOrWhiteSpace(message))
+                return Ok();
+            return StatusCode(500, message);
+        }
     }
 }

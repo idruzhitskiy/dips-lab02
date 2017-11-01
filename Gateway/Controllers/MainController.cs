@@ -15,6 +15,8 @@ using Gateway.Models;
 using Gateway.Services;
 using Microsoft.Extensions.Logging;
 using Gateway.Services.Implementations;
+using Gateway.Scheduling;
+using System.Text.RegularExpressions;
 
 namespace Gateway.Controllers
 {
@@ -37,63 +39,164 @@ namespace Gateway.Controllers
             this.newsService = newsService;
         }
 
-        [HttpPost("register")]
+        [HttpPost("user")]
         public async Task<IActionResult> Register(RegisterModel userModel)
         {
+            if (!Regex.IsMatch(userModel.Email, @"\S+@\S+.\S+"))
+                return BadRequest("Email not valid");
+
             var response = await accountsService.Register(userModel);
             logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
 
             if (response?.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                logger.LogInformation("Adding claim");
-                logger.LogInformation($"Adding claim response: {response?.StatusCode}");
                 return Ok();
             }
             else if (response != null)
             {
                 string respContent = response.Content != null ? await response.Content.ReadAsStringAsync() : string.Empty;
                 logger.LogError($"User {userModel.Username} not registered, error content: {respContent}");
-                return BadRequest(respContent);
+                return StatusCode(500, respContent);
             }
             else
             {
                 logger.LogCritical("Accounts service unavailable");
-                return NotFound("Service unavailable");
+                return StatusCode(503, "Accounts service unavailable");
             }
         }
-        
-        [HttpGet("{name}/news")]
-        public async Task<List<string>> GetNews(string name, int page = 0, int perpage = 0)
+
+        // Модифицирует несколько сервисов
+        [HttpDelete("user/{username}")]
+        public async Task<IActionResult> DeleteUser(string username)
         {
-            var userExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = name });
-            logger.LogInformation($"User response: {userExists?.StatusCode}");
-
-            if (userExists == null || userExists.StatusCode != System.Net.HttpStatusCode.OK)
-                return null;
-
-            List<string> response = await newsService.GetNewsForUser(name, page, perpage);
-            if (response != null)
+            var accountsServerResult = await accountsService.DeleteUser(username); 
+            if (accountsServerResult == null) 
             {
-                logger.LogInformation($"Number of news for user {name}: {response.Count}");
-                return response;
+                return StatusCode(503, "Accounts service unavailable");
             }
+
+            var newsServerResult = await newsService.DeleteNewsWithAuthor(username);
+            if (newsServerResult == null) 
+            {
+                var result = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true;
+                return StatusCode(503, $"News service unavailable, rollback status: Acc - {(result ? "ok" : "failed")}");
+            }
+
+            var subscriptionsServerResult = await subscriptionsService.RemoveAllAssociatedSubscriptions(username);
+            if (subscriptionsServerResult == null)
+            {
+                var resultNews = true;
+                foreach (var news in newsServerResult)
+                    resultNews &= (await newsService.AddNews(news))?.IsSuccessStatusCode == true;
+                var resultAccounts = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true ;
+                return StatusCode(503, $"News service unavailable, rollback status: Acc - { (resultAccounts ? "ok" : "failed")}, News - {(resultNews ? "ok" : "failed")}");
+            }
+
+            return Ok();
+        }
+
+        // Модифицирует несколько сервисов
+        [HttpPost("user/{username}")]
+        public async Task<IActionResult> ChangeUserName(string username, string newUsername)
+        {
+            var accountsResult = await accountsService.ChangeUserName(username, newUsername);
+            var newsResult = await newsService.ChangeUserName(username, newUsername);
+            var subscriptionsResult = await subscriptionsService.ChangeUserName(username, newUsername);
+
+            if (accountsResult == null || newsResult == null || subscriptionsResult == null)
+            {
+                if (accountsResult != null)
+                    await accountsService.ChangeUserName(newUsername, username);
+                if (newsResult != null)
+                    await newsService.ChangeUserName(newUsername, username);
+                if (subscriptionsResult != null)
+                    await subscriptionsService.ChangeUserName(newUsername, username);
+
+                Scheduler.ScheduleRetryUntilSuccess(async () =>
+                {
+                    using (var client = new HttpClient())
+                    {
+                        var response = await client.PostAsync($"http://localhost/user/{username}", 
+                            new FormUrlEncodedContent(new Dictionary<string, string> { { "newUsername", newUsername } }));
+                        if (response.IsSuccessStatusCode)
+                            return true;
+                        return false;
+                    }
+                });
+                return StatusCode(503, "Services status: " +
+                    $"AS: {(accountsResult != null ? "online" : "offline")};" +
+                    $"NS: {(newsResult != null ? "online" : "offline")};" +
+                    $"SS: {(subscriptionsResult != null ? "online" : "offline")};");
+            }
+
+            var message = string.Empty;
+            if (!accountsResult.IsSuccessStatusCode)
+                message += $"AS operation status: {accountsResult.StatusCode}, {accountsResult.Content.ReadAsStringAsync().Result}";
+            if (!newsResult.IsSuccessStatusCode)
+                message += $"NS operation status: {newsResult.StatusCode}, {newsResult.Content.ReadAsStringAsync().Result}";
+            if (!subscriptionsResult.IsSuccessStatusCode)
+                message += $"SS operation status: {subscriptionsResult.StatusCode}, {subscriptionsResult.Content.ReadAsStringAsync().Result}";
+
+            if (string.IsNullOrWhiteSpace(message))
+                return Ok();
+            return StatusCode(500, message);
+        }
+
+        // Запрашивает информацию с нескольких сервисов
+        [HttpGet("{name}/news")]
+        public async Task<IActionResult> GetNews(string name, int page = 0, int perpage = 0)
+        {
+            var message = string.Empty;
+            var userExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = name });
+
+            if (userExists == null)
+                message = "Accounts service unavailable";
+            else if (!userExists.IsSuccessStatusCode)
+                message = $"User doesn't exist, response: {userExists}";
             else
             {
-                logger.LogCritical("News service unavailable");
-                return null;
+                List<string> authors = await subscriptionsService.GetSubscribedAuthorsForName(name, 0, 0);
+                IEnumerable<string> news = Enumerable.Empty<string>();
+                if (authors == null)
+                {
+                    logger.LogCritical("Subscriptions service unavailable");
+                    news = await newsService.GetNews();
+                }
+                else
+                {
+                    foreach (var author in authors)
+                        news = news.Concat((await newsService.GetNewsByUser(author, 0, 0)) ?? Enumerable.Empty<string>());
+                }
+
+                if (news != null)
+                {
+                    if (perpage != 0 && page != 0)
+                        news = news.Skip(perpage * page);
+                    if (perpage != 0)
+                        news = news.Take(perpage);
+                    return StatusCode(200, news);
+                }
+                else
+                    message = "News service unavailable";
             }
+            logger.LogCritical(message);
+            return StatusCode(500, message);
         }
 
         [HttpPost("news")]
         public async Task<IActionResult> AddNews(NewsModel news)
         {
+            if (string.IsNullOrWhiteSpace(news.Author) ||
+                string.IsNullOrWhiteSpace(news.Body) ||
+                string.IsNullOrWhiteSpace(news.Header))
+                return StatusCode(400, "News model not fulfilled");
+
             var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = news.Author });
             logger.LogInformation($"Author response: {authorExists?.StatusCode}");
-
             if (authorExists == null)
-                return NotFound("Accounts service unavailable");
+                return StatusCode(503, "Accounts service unavailable");
             if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
-                return NotFound("Author doesn't exists");
+                return StatusCode(500, "Author doesn't exists");
 
             var response = await newsService.AddNews(news);
             if (response != null)
@@ -102,35 +205,38 @@ namespace Gateway.Controllers
                 if (response.IsSuccessStatusCode)
                     return Ok();
                 else
-                    return BadRequest(response.Content?.ReadAsStringAsync()?.Result);
+                    return StatusCode(500,response.Content?.ReadAsStringAsync()?.Result);
             }
             else
             {
                 logger.LogCritical("News service unavailable");
-                return NotFound("Service unavailable");
+                return StatusCode(503, "News service unavailable");
             }
         }
 
         [HttpGet("{subscriber}/subscriptions")]
-        public async Task<List<string>> GetSubscribedAuthors(string subscriber, int page = 0, int perpage = 0)
+        public async Task<IActionResult> GetSubscribedAuthors(string subscriber, int page = 0, int perpage = 0)
         {
             var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
+
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}");
 
-            if (subscriberExists == null || subscriberExists.StatusCode != System.Net.HttpStatusCode.OK)
-                return null;
+            if (subscriberExists == null)
+                return StatusCode(503, "Accounts service unavailable");
+            if (subscriberExists.StatusCode != System.Net.HttpStatusCode.OK)
+                return StatusCode(500, "User doesn't exist");
 
             logger.LogInformation($"Requesting authors for user {subscriber}");
             var authors = await subscriptionsService.GetSubscribedAuthorsForName(subscriber, page, perpage);
             if (authors != null)
             {
                 logger.LogInformation($"Found {authors.Count()} authors for user {subscriber}");
-                return authors;
+                return StatusCode(200, authors);
             }
             else
             {
                 logger.LogCritical("Subscriptions service unavailable");
-                return null;
+                return StatusCode(503, "Subscriptions service unavailable");
             }
         }
 
@@ -138,15 +244,15 @@ namespace Gateway.Controllers
         public async Task<IActionResult> AddSubscription(string subscriber, string author)
         {
             var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
-            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = author});
+            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = author });
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
 
             if (subscriberExists == null || authorExists == null)
-                return NotFound("Accounts service unavailable");
+                return StatusCode(503, "Accounts service unavailable");
             if (subscriberExists.StatusCode != System.Net.HttpStatusCode.OK)
-                return NotFound("Subscriber doesn't exists");
+                return StatusCode(500, "Subscriber doesn't exists");
             if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
-                return NotFound("Author doesn't exists");
+                return StatusCode(500, "Author doesn't exists");
 
             var response = await subscriptionsService.AddSubscription(subscriber, author);
             if (response != null)
@@ -155,12 +261,12 @@ namespace Gateway.Controllers
                 if (response.IsSuccessStatusCode)
                     return Ok();
                 else
-                    return BadRequest(response.Content?.ReadAsStringAsync()?.Result);
+                    return StatusCode(500, response.Content?.ReadAsStringAsync()?.Result);
             }
             else
             {
                 logger.LogCritical("Subscriptions service unavailable");
-                return NotFound("Service unavailable");
+                return StatusCode(503, "Service unavailable");
             }
         }
 
@@ -173,11 +279,11 @@ namespace Gateway.Controllers
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
 
             if (subscriberExists == null || authorExists == null)
-                return NotFound("Accounts service unavailable");
+                return StatusCode(503, "Accounts service unavailable");
             if (subscriberExists.StatusCode != System.Net.HttpStatusCode.OK)
-                return NotFound("Subscriber doesn't exists");
+                return StatusCode(500, "Subscriber doesn't exists");
             if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
-                return NotFound("Author doesn't exists");
+                return StatusCode(500, "Author doesn't exists");
 
             var response = await subscriptionsService.RemoveSubscription(subscriber, author);
             if (response != null)
@@ -187,12 +293,12 @@ namespace Gateway.Controllers
                 if (response.IsSuccessStatusCode)
                     return Ok();
                 else
-                    return BadRequest(response.Content?.ReadAsStringAsync()?.Result);
+                    return StatusCode(500, response.Content?.ReadAsStringAsync()?.Result);
             }
             else
             {
                 logger.LogCritical("Subscriptions service unavailable");
-                return NotFound("Service unavailable");
+                return StatusCode(503, "Service unavailable");
             }
         }
     }
