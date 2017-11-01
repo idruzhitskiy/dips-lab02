@@ -107,5 +107,38 @@ namespace SubscriptionManager.Controllers
             }
             return Ok();
         }
+
+        [HttpPut("user/{username}")]
+        public async Task<IActionResult> ChangeUserName(string username, string newUsername)
+        {
+            string message = string.Empty;
+            var subscriptions = db.Subscriptions.Where(s => s.Author == username || s.Subscriber == username);
+            if (subscriptions.Any())
+            {
+                var otherUserSubscriptions = db.Subscriptions.Where(s => s.Author == newUsername || s.Subscriber == newUsername);
+                if (!otherUserSubscriptions.Any())
+                {
+                    foreach (var subscription in subscriptions)
+                    {
+                        if (subscription.Author == username)
+                            subscription.Author = newUsername;
+                        if (subscription.Subscriber == username)
+                            subscription.Subscriber = newUsername;
+                    }
+
+                    db.Subscriptions.UpdateRange(subscriptions);
+                    db.SaveChanges();
+                }
+                else
+                    message = $"Subscriptions for/by user with username {newUsername} already exists";
+            }
+            else
+                message = $"Subscriptions for/by user with username {username} not found";
+
+            logger.LogDebug(message);
+            if (string.IsNullOrWhiteSpace(message))
+                return Ok();
+            return StatusCode(500, message);
+        }
     }
 }

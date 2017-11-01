@@ -13,5 +13,6 @@ namespace Gateway.Services
         Task<HttpResponseMessage> AddNews(NewsModel newsModel);
         Task<List<string>> GetNewsByUser(string username, int page, int perpage);
         Task<List<NewsModel>> DeleteNewsWithAuthor(string username);
+        Task<HttpResponseMessage> ChangeUserName(string username, string newUsername);
     }
 }

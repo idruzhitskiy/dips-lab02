@@ -66,5 +66,8 @@ namespace Gateway.Services.Implementations
                 return null;
             }
         }
+
+        public async Task<HttpResponseMessage> ChangeUserName(string username, string newUsername) => 
+            await PutForm($"user/{username}", new Dictionary<string, string> { { "newUsername", newUsername } });
     }
 }

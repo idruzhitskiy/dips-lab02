@@ -15,6 +15,7 @@ using Gateway.Models;
 using Gateway.Services;
 using Microsoft.Extensions.Logging;
 using Gateway.Services.Implementations;
+using Gateway.Scheduling;
 
 namespace Gateway.Controllers
 {
@@ -62,6 +63,7 @@ namespace Gateway.Controllers
             }
         }
 
+        // Модифицирует несколько сервисов
         [HttpDelete("user/{username}")]
         public async Task<IActionResult> DeleteUser(string username)
         {
@@ -87,7 +89,54 @@ namespace Gateway.Controllers
                 var resultAccounts = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true ;
                 return StatusCode(503, $"News service unavailable, rollback status: Acc - { (resultAccounts ? "ok" : "failed")}, News - {(resultNews ? "ok" : "failed")}");
             }
+
             return Ok();
+        }
+
+        [HttpPost("user/{username}")]
+        public async Task<IActionResult> ChangeUserName(string username, string newUsername)
+        {
+            var accountsResult = await accountsService.ChangeUserName(username, newUsername);
+            var newsResult = await newsService.ChangeUserName(username, newUsername);
+            var subscriptionsResult = await subscriptionsService.ChangeUserName(username, newUsername);
+
+            if (accountsResult == null || newsResult == null || subscriptionsResult == null)
+            {
+                if (accountsResult != null)
+                    await accountsService.ChangeUserName(newUsername, username);
+                if (newsResult != null)
+                    await newsService.ChangeUserName(newUsername, username);
+                if (subscriptionsResult != null)
+                    await subscriptionsService.ChangeUserName(newUsername, username);
+
+                Scheduler.ScheduleRetryUntilSuccess(async () =>
+                {
+                    using (var client = new HttpClient())
+                    {
+                        var response = await client.PostAsync($"http://localhost/user/{username}", 
+                            new FormUrlEncodedContent(new Dictionary<string, string> { { "newUsername", newUsername } }));
+                        if (response.IsSuccessStatusCode)
+                            return true;
+                        return false;
+                    }
+                });
+                return StatusCode(503, "Services status: " +
+                    $"AS: {(accountsResult != null ? "online" : "offline")};" +
+                    $"NS: {(newsResult != null ? "online" : "offline")};" +
+                    $"SS: {(subscriptionsResult != null ? "online" : "offline")};");
+            }
+
+            var message = string.Empty;
+            if (!accountsResult.IsSuccessStatusCode)
+                message += $"AS operation status: {accountsResult.StatusCode}, {accountsResult.Content.ReadAsStringAsync().Result}";
+            if (!newsResult.IsSuccessStatusCode)
+                message += $"NS operation status: {newsResult.StatusCode}, {newsResult.Content.ReadAsStringAsync().Result}";
+            if (!subscriptionsResult.IsSuccessStatusCode)
+                message += $"SS operation status: {subscriptionsResult.StatusCode}, {subscriptionsResult.Content.ReadAsStringAsync().Result}";
+
+            if (string.IsNullOrWhiteSpace(message))
+                return Ok();
+            return StatusCode(500, message);
         }
 
         [HttpGet("{name}/news")]

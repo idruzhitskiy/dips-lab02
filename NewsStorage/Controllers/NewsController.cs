@@ -112,5 +112,32 @@ namespace NewsStorage.Controllers
             return Ok(news.Select(n => new NewsModel { Author = n.Author, Body = n.Body, Date = n.Date, Header = n.Header }).ToList());
         }
 
+        [HttpPut("user/{username}")]
+        public async Task<IActionResult> ChangeUserName(string username, string newUsername)
+        {
+            string message = string.Empty;
+
+            var news = db.News.Where(n => n.Author == username);
+            if (news.Any())
+            {
+                var otherUserNews = db.News.Where(n => n.Author == newUsername);
+                if (!otherUserNews.Any())
+                {
+                    foreach (var singleNews in news)
+                        singleNews.Author = newUsername;
+                    db.News.UpdateRange(news);
+                    db.SaveChanges();
+                }
+                else
+                    message = $"News from author with username {newUsername} already exists";
+            }
+            else
+                message = $"News from author with username {username} not found";
+
+            logger.LogDebug(message);
+            if (string.IsNullOrWhiteSpace(message))
+                return Ok();
+            return StatusCode(500, message);
+        }
     }
 }

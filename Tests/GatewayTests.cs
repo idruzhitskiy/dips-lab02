@@ -280,9 +280,7 @@ namespace Tests
         {
             return Mock.Of<IAccountsService>(srv =>
                 srv.CheckIfUserExists(It.IsAny<ExistsModel>()) == Task.FromResult(GetResponseMessage(loginCode)) &&
-                srv.Register(It.IsAny<RegisterModel>()) == Task.FromResult(GetResponseMessage(registerCode)) &&
-                srv.GetNameByClaim(It.IsAny<string>()) == Task.FromResult(currentUsername) &&
-                srv.RemoveClaim(It.IsAny<string>()) == Task.FromResult(GetResponseMessage(removeClaimCode)));
+                srv.Register(It.IsAny<RegisterModel>()) == Task.FromResult(GetResponseMessage(registerCode)));
         }
 
         private INewsService GetNewsService(List<string> getNewsContent = null, HttpStatusCode addNewsCode = HttpStatusCode.OK)
