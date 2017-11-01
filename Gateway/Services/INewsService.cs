@@ -14,5 +14,6 @@ namespace Gateway.Services
         Task<List<string>> GetNewsByUser(string username, int page, int perpage);
         Task<List<NewsModel>> DeleteNewsWithAuthor(string username);
         Task<HttpResponseMessage> ChangeUserName(string username, string newUsername);
+        Task<List<string>> GetNews();
     }
 }

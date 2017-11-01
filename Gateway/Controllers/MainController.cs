@@ -93,6 +93,7 @@ namespace Gateway.Controllers
             return Ok();
         }
 
+        // Модифицирует несколько сервисов
         [HttpPost("user/{username}")]
         public async Task<IActionResult> ChangeUserName(string username, string newUsername)
         {
@@ -139,26 +140,45 @@ namespace Gateway.Controllers
             return StatusCode(500, message);
         }
 
+        // Запрашивает информацию с нескольких сервисов
         [HttpGet("{name}/news")]
-        public async Task<List<string>> GetNews(string name, int page = 0, int perpage = 0)
+        public async Task<IActionResult> GetNews(string name, int page = 0, int perpage = 0)
         {
+            var message = string.Empty;
             var userExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = name });
-            logger.LogInformation($"User response: {userExists?.StatusCode}");
 
-            if (userExists == null || userExists.StatusCode != System.Net.HttpStatusCode.OK)
-                return null;
-
-            List<string> response = await newsService.GetNewsForUser(name, page, perpage);
-            if (response != null)
-            {
-                logger.LogInformation($"Number of news for user {name}: {response.Count}");
-                return response;
-            }
+            if (userExists == null)
+                message = "Accounts service unavailable";
+            else if (!userExists.IsSuccessStatusCode)
+                message = $"User doesn't exist, response: {userExists}";
             else
             {
-                logger.LogCritical("News service unavailable");
-                return null;
+                List<string> authors = await subscriptionsService.GetSubscribedAuthorsForName(name, 0, 0);
+                IEnumerable<string> news = Enumerable.Empty<string>();
+                if (authors == null)
+                {
+                    logger.LogCritical("Subscriptions service unavailable");
+                    news = await newsService.GetNews();
+                }
+                else
+                {
+                    foreach (var author in authors)
+                        news = news.Concat((await newsService.GetNewsByUser(author, 0, 0)) ?? Enumerable.Empty<string>());
+                }
+
+                if (news != null)
+                {
+                    if (perpage != 0 && page != 0)
+                        news = news.Skip(perpage * page);
+                    if (perpage != 0)
+                        news = news.Take(perpage);
+                    return StatusCode(200, news);
+                }
+                else
+                    message = "News service unavailable";
             }
+            logger.LogCritical(message);
+            return StatusCode(503, message);
         }
 
         [HttpPost("news")]

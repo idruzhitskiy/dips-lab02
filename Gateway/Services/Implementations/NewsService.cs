@@ -69,5 +69,22 @@ namespace Gateway.Services.Implementations
 
         public async Task<HttpResponseMessage> ChangeUserName(string username, string newUsername) => 
             await PutForm($"user/{username}", new Dictionary<string, string> { { "newUsername", newUsername } });
+
+        public async Task<List<string>> GetNews()
+        {
+            var httpResponseMessage = await Get("");
+            if (httpResponseMessage == null || httpResponseMessage.Content == null)
+                return null;
+
+            string response = await httpResponseMessage.Content.ReadAsStringAsync();
+            try
+            {
+                return JsonConvert.DeserializeObject<List<string>>(response);
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

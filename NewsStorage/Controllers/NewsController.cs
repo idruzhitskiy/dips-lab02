@@ -56,6 +56,12 @@ namespace NewsStorage.Controllers
             return new List<string>();
         }
 
+        [HttpGet()]
+        public async Task<List<string>> GetNews()
+        {
+            return db.News.Select(n => $"Header: {n.Header}{Environment.NewLine}Body: {n.Body}{Environment.NewLine}Author: {n.Author}").ToList();
+        }
+
         [HttpPost("")]
         public async Task<IActionResult> AddNews([FromBody] NewsModel newsModel)
         {
