@@ -42,8 +42,8 @@ namespace Gateway.Controllers
         [HttpPost("user")]
         public async Task<IActionResult> Register(RegisterModel userModel)
         {
-            if (!Regex.IsMatch(userModel.Email, @"\S+@\S+.\S+"))
-                return BadRequest("Email not valid");
+            if (userModel.Username == null || !Regex.IsMatch(userModel.Username, @"\S+"))
+                return BadRequest("Name not valid");
 
             var response = await accountsService.Register(userModel);
             logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
@@ -69,14 +69,16 @@ namespace Gateway.Controllers
         [HttpDelete("user/{username}")]
         public async Task<IActionResult> DeleteUser(string username)
         {
-            var accountsServerResult = await accountsService.DeleteUser(username); 
-            if (accountsServerResult == null) 
+            var accountsServerResult = await accountsService.DeleteUser(username);
+            if (accountsServerResult == null)
             {
                 return StatusCode(503, "Accounts service unavailable");
             }
+            else if (string.IsNullOrWhiteSpace(accountsServerResult.Username))
+                return StatusCode(500, "User not found");
 
             var newsServerResult = await newsService.DeleteNewsWithAuthor(username);
-            if (newsServerResult == null) 
+            if (newsServerResult == null)
             {
                 var result = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true;
                 return StatusCode(503, $"News service unavailable, rollback status: Acc - {(result ? "ok" : "failed")}");
@@ -88,8 +90,8 @@ namespace Gateway.Controllers
                 var resultNews = true;
                 foreach (var news in newsServerResult)
                     resultNews &= (await newsService.AddNews(news))?.IsSuccessStatusCode == true;
-                var resultAccounts = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true ;
-                return StatusCode(503, $"News service unavailable, rollback status: Acc - { (resultAccounts ? "ok" : "failed")}, News - {(resultNews ? "ok" : "failed")}");
+                var resultAccounts = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true;
+                return StatusCode(503, $"Subscriptions service unavailable, rollback status: Acc - { (resultAccounts ? "ok" : "failed")}, News - {(resultNews ? "ok" : "failed")}");
             }
 
             return Ok();
@@ -116,10 +118,25 @@ namespace Gateway.Controllers
                 {
                     using (var client = new HttpClient())
                     {
-                        var response = await client.PostAsync($"http://localhost/user/{username}", 
-                            new FormUrlEncodedContent(new Dictionary<string, string> { { "newUsername", newUsername } }));
-                        if (response.IsSuccessStatusCode)
+                        try
+                        {
+                            accountsResult = await accountsService.ChangeUserName(username, newUsername);
+                            newsResult = await newsService.ChangeUserName(username, newUsername);
+                            subscriptionsResult = await subscriptionsService.ChangeUserName(username, newUsername);
+
+                            if (accountsResult == null || newsResult == null || subscriptionsResult == null)
+                            {
+                                if (accountsResult != null)
+                                    await accountsService.ChangeUserName(newUsername, username);
+                                if (newsResult != null)
+                                    await newsService.ChangeUserName(newUsername, username);
+                                if (subscriptionsResult != null)
+                                    await subscriptionsService.ChangeUserName(newUsername, username);
+                                return false;
+                            }
                             return true;
+                        }
+                        catch { }
                         return false;
                     }
                 });
@@ -131,11 +148,11 @@ namespace Gateway.Controllers
 
             var message = string.Empty;
             if (!accountsResult.IsSuccessStatusCode)
-                message += $"AS operation status: {accountsResult.StatusCode}, {accountsResult.Content.ReadAsStringAsync().Result}";
+                message += $"AS operation status: {accountsResult.StatusCode}, {accountsResult.Content.ReadAsStringAsync().Result};";
             if (!newsResult.IsSuccessStatusCode)
-                message += $"NS operation status: {newsResult.StatusCode}, {newsResult.Content.ReadAsStringAsync().Result}";
+                message += $"NS operation status: {newsResult.StatusCode}, {newsResult.Content.ReadAsStringAsync().Result};";
             if (!subscriptionsResult.IsSuccessStatusCode)
-                message += $"SS operation status: {subscriptionsResult.StatusCode}, {subscriptionsResult.Content.ReadAsStringAsync().Result}";
+                message += $"SS operation status: {subscriptionsResult.StatusCode}, {subscriptionsResult.Content.ReadAsStringAsync().Result};";
 
             if (string.IsNullOrWhiteSpace(message))
                 return Ok();
@@ -184,7 +201,7 @@ namespace Gateway.Controllers
         }
 
         [HttpPost("news")]
-        public async Task<IActionResult> AddNews(NewsModel news)
+        public async Task<IActionResult> AddNews([Bind(new[] { "Header", "Body", "Author" })]NewsModel news)
         {
             if (string.IsNullOrWhiteSpace(news.Author) ||
                 string.IsNullOrWhiteSpace(news.Body) ||
@@ -205,7 +222,7 @@ namespace Gateway.Controllers
                 if (response.IsSuccessStatusCode)
                     return Ok();
                 else
-                    return StatusCode(500,response.Content?.ReadAsStringAsync()?.Result);
+                    return StatusCode(500, response.Content?.ReadAsStringAsync()?.Result);
             }
             else
             {

@@ -105,7 +105,7 @@ namespace SubscriptionManager.Controllers
                 db.Subscriptions.RemoveRange(subscriptions);
                 db.SaveChanges();
             }
-            return Ok();
+            return Ok(subscriptions.Select(s => new Tuple<string, string>(s.Author, s.Subscriber)).ToList());
         }
 
         [HttpPut("user/{username}")]

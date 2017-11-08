@@ -9,6 +9,5 @@ namespace Gateway.Models
     public class RegisterModel
     {
         public string Username { get; set; }
-        public string Email { get; internal set; }
     }
 }

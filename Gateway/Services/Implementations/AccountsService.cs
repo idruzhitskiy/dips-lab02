@@ -24,8 +24,10 @@ namespace Gateway.Services.Implementations
         public async Task<RegisterModel> DeleteUser(string username)
         {
             var httpResponseMessage = await Delete(username);
-            if (httpResponseMessage == null || httpResponseMessage.Content == null)
+            if (httpResponseMessage == null)
                 return null;
+            if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+                return new RegisterModel();
 
             string response = await httpResponseMessage.Content.ReadAsStringAsync();
             try

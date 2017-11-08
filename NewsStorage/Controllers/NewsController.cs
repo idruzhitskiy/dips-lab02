@@ -79,7 +79,7 @@ namespace NewsStorage.Controllers
             else
             {
                 logger.LogWarning($"News already exists");
-                return BadRequest();
+                return StatusCode(500, "Duplicate");
             }
         }
 

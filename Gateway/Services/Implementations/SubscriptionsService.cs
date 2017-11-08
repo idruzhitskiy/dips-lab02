@@ -68,7 +68,12 @@ namespace Gateway.Services.Implementations
             }
         }
 
-        public async Task<HttpResponseMessage> ChangeUserName(string username, string newUsername) => 
-            await PutForm($"user/{username}", new Dictionary<string, string> { { "newUsername", newUsername } });
+        public async Task<HttpResponseMessage> ChangeUserName(string username, string newUsername)
+        {
+            HttpResponseMessage httpResponseMessage = await PutForm($"user/{username}", new Dictionary<string, string> { { "newUsername", newUsername } });
+            if (httpResponseMessage?.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                httpResponseMessage = null;
+            return httpResponseMessage;
+        }
     }
 }
