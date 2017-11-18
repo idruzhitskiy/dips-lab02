@@ -37,27 +37,6 @@ namespace Tests
         }
 
         [TestMethod]
-        public void TestGetNewsValid()
-        {
-            subscriptionsService = GetSubscriptionsService(new List<string> { username });
-            List<News> news = new List<News> { new News { Author = username } };
-            dbContext = GetDbContext(news);
-            var newsController = GetNewsController();
-
-            var result = newsController.GetNewsForUser(username.Substring(1), 0, 0).Result;
-            Assert.IsTrue(result.Count == news.Count);
-        }
-
-        [TestMethod]
-        public void TestGetNewsNotValid()
-        {
-            var newsController = GetNewsController();
-
-            var result = newsController.GetNewsForUser(username, 0, 0).Result;
-            Assert.IsTrue(result.Count == 0);
-        }
-
-        [TestMethod]
         public void TestAddNewsValid()
         {
             var news = new List<News>();
@@ -83,7 +62,7 @@ namespace Tests
         #region Support
         private NewsController GetNewsController()
         {
-            return new NewsController(dbContext, subscriptionsService, logger);
+            return new NewsController(dbContext, logger);
         }
 
         private ApplicationDbContext GetDbContext(List<News> news = null)

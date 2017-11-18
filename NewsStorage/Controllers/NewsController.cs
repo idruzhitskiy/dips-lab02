@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Gateway.Services;
 using Gateway.Models;
 using Microsoft.Extensions.Logging;
+using Gateway.Pagination;
 
 namespace NewsStorage.Controllers
 {
@@ -16,50 +17,13 @@ namespace NewsStorage.Controllers
     public class NewsController : Controller
     {
         private ApplicationDbContext db;
-        private ISubscriptionsService subscriptionsService;
         private ILogger<NewsController> logger;
 
-        public NewsController(ApplicationDbContext db, ISubscriptionsService subscriptionsService,
+        public NewsController(ApplicationDbContext db,
             ILogger<NewsController> logger)
         {
             this.db = db;
             this.logger = logger;
-            this.subscriptionsService = subscriptionsService;
-        }
-
-        [HttpGet("{name}")]
-        public async Task<List<string>> GetNewsForUser([FromRoute]string name, int page, int perpage)
-        {
-            logger.LogDebug($"Retrieving news for user {name}");
-            var authors = await subscriptionsService.GetSubscribedAuthorsForName(name, 0, 0);
-            if (authors != null && authors.Count > 0)
-            {
-                logger.LogDebug($"Authors for user {name}: {string.Join(", ", authors)} ({authors?.Count})");
-                var news = db.News.Where(n => authors.Contains(n.Author));
-                logger.LogDebug($"Found {news.Count()} news for user {name}");
-                news = news.OrderByDescending(n => n.Date);
-                if (perpage != 0 && page != 0)
-                {
-                    logger.LogDebug($"Skipping {perpage * page} news due to pagination");
-                    news = news.Skip(perpage * page);
-                }
-                if (perpage != 0)
-                {
-                    logger.LogDebug($"Retrieving at max {perpage} news");
-                    news = news.Take(perpage);
-                }
-                logger.LogDebug($"Returning {news.Count()} news");
-                return news.Select(n => $"Header: {n.Header}{Environment.NewLine}Body: {n.Body}{Environment.NewLine}Author: {n.Author}")
-                    .ToList();
-            }
-            logger.LogWarning($"No subscribed authors found for user {name}");
-            return new List<string>();
-        }
-
-        [HttpGet()]
-        public async Task<List<string>> GetNews()
-        {
-            return db.News.Select(n => $"Header: {n.Header}{Environment.NewLine}Body: {n.Body}{Environment.NewLine}Author: {n.Author}").ToList();
         }
 
         [HttpPost("")]
@@ -84,12 +48,15 @@ namespace NewsStorage.Controllers
         }
 
         [HttpGet("author/{name}")]
-        public async Task<List<string>> GetNewsByUser(string name, int page, int perpage)
+        public async Task<PaginatedList<string>> GetNewsByUser(string name, int page, int perpage)
         {
+            int maxPage = 0;
             logger.LogDebug($"Retrieving news by user {name}");
             var news = db.News.Where(n => n.Author == name);
             logger.LogDebug($"Found {news.Count()} news by user {name}");
             news = news.OrderByDescending(n => n.Date);
+            if (perpage != 0)
+                maxPage = news.Count() / perpage + (news.Count() % perpage == 0 ? -1 : 0);
             if (perpage != 0 && page != 0)
             {
                 logger.LogDebug($"Skipping {perpage * page} news due to pagination");
@@ -101,8 +68,8 @@ namespace NewsStorage.Controllers
                 news = news.Take(perpage);
             }
             logger.LogDebug($"Returning {news.Count()} news");
-            return news.Select(n => $"Header: {n.Header}{Environment.NewLine}Body: {n.Body}{Environment.NewLine}Author: {n.Author}")
-                .ToList();
+            return new PaginatedList<string>(news.Select(n => $"Header: {n.Header}{Environment.NewLine}Body: {n.Body}{Environment.NewLine}Author: {n.Author}")
+                .ToList(), perpage, page, maxPage);
         }
 
         [HttpDelete("author/{name}")]

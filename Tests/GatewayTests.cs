@@ -286,7 +286,6 @@ namespace Tests
         private INewsService GetNewsService(List<string> getNewsContent = null, HttpStatusCode addNewsCode = HttpStatusCode.OK)
         {
             return Mock.Of<INewsService>(srv =>
-                srv.GetNewsForUser(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()) == Task.FromResult(getNewsContent) &&
                 srv.AddNews(It.IsAny<NewsModel>()) == Task.FromResult(GetResponseMessage(addNewsCode)));
         }
 

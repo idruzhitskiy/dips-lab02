@@ -1,4 +1,5 @@
 ﻿using Gateway.Models;
+using Gateway.Pagination;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
@@ -14,26 +15,9 @@ namespace Gateway.Services.Implementations
         public NewsService(IConfiguration configuration) 
             : base(configuration.GetSection("Addresses")["News"]) { }
 
-        public async Task<List<string>> GetNewsForUser(string name, int page, int perpage)
-        {
-            var httpResponseMessage = await Get($"{name}?page={page}&perpage={perpage}");
-            if (httpResponseMessage == null || httpResponseMessage.Content == null)
-                return null;
-
-            string response = await httpResponseMessage.Content.ReadAsStringAsync();
-            try
-            {
-                return JsonConvert.DeserializeObject<List<string>>(response);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
         public async Task<HttpResponseMessage> AddNews(NewsModel newsModel) => await PostJson("", newsModel);
 
-        public async Task<List<string>> GetNewsByUser(string username, int page, int perpage)
+        public async Task<PaginatedList<string>> GetNewsByUser(string username, int page, int perpage)
         {
             var httpResponseMessage = await Get($"author/{username}?page={page}&perpage={perpage}");
             if (httpResponseMessage == null || httpResponseMessage.Content == null)
@@ -42,7 +26,7 @@ namespace Gateway.Services.Implementations
             string response = await httpResponseMessage.Content.ReadAsStringAsync();
             try
             {
-                return JsonConvert.DeserializeObject<List<string>>(response);
+                return JsonConvert.DeserializeObject<PaginatedList<string>>(response);
             }
             catch
             {

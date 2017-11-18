@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using SubscriptionManager.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Gateway.Pagination;
 
 namespace SubscriptionManager.Controllers
 {
@@ -22,11 +23,14 @@ namespace SubscriptionManager.Controllers
         }
 
         [HttpGet("{subscriber}")]
-        public async Task<List<string>> GetAuthorsForName(string subscriber, int page, int perpage)
+        public async Task<PaginatedList<string>> GetAuthorsForName(string subscriber, int page, int perpage)
         {
+            int maxPage = 0;
             logger.LogDebug($"Retriving subscriptions for user {subscriber}");
             var result = db.Subscriptions.Where(s => s.Subscriber == subscriber);
             logger.LogDebug($"Found {result.Count()} authors for user {subscriber}");
+            if (perpage != 0)
+                maxPage = result.Count() / perpage + (result.Count() % perpage == 0 ? -1 : 0) ;
             if (page != 0 && perpage != 0)
             {
                 logger.LogDebug($"Skipping {page * perpage} entities due to pagination");
@@ -38,7 +42,7 @@ namespace SubscriptionManager.Controllers
                 result = result.Take(perpage);
             }
             logger.LogDebug($"Retrieved {result.Count()} authors: {string.Join(", ", result)}");
-            return result.Select(s => s.Author).ToList();
+            return new PaginatedList<string>(result.Select(s => s.Author).ToList(), perpage, page, maxPage);
         }
 
         [HttpPost("{subscriber}")]

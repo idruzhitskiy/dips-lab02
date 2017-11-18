@@ -32,9 +32,10 @@ namespace Authentication
             services.AddMvc();
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("AuthConnection")));
+                //options.UseSqlServer(Configuration.GetConnectionString("AuthConnection")));
+                options.UseInMemoryDatabase("Authentication"));
 
-            services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
+            //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

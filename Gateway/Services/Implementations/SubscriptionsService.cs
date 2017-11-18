@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Gateway.Pagination;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -13,14 +14,14 @@ namespace Gateway.Services.Implementations
         public SubscriptionsService(IConfiguration configuration) 
             : base(configuration.GetSection("Addresses")["Subscriptions"]) { }
 
-        public async Task<List<string>> GetSubscribedAuthorsForName(string name, int page, int perpage)
+        public async Task<PaginatedList<string>> GetSubscribedAuthorsForName(string name, int page, int perpage)
         {
             var httpResponseMessage = await Get($"{name}?page={page}&perpage={perpage}");
             if (httpResponseMessage == null || httpResponseMessage.Content == null)
                 return null;
             try
             {
-                return JsonConvert.DeserializeObject<List<string>>(await httpResponseMessage.Content.ReadAsStringAsync());
+                return JsonConvert.DeserializeObject<PaginatedList<string>>(await httpResponseMessage.Content.ReadAsStringAsync());
             }
             catch
             {

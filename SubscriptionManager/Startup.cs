@@ -27,9 +27,10 @@ namespace SubscriptionManager
             services.AddMvc();
 
             services.AddDbContext<ApplicationDbContext>(options =>
-               options.UseSqlServer(Configuration.GetConnectionString("SubsConnection")));
+               //options.UseSqlServer(Configuration.GetConnectionString("SubsConnection")));
+               options.UseInMemoryDatabase("Subscription"));
 
-            services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
+            //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

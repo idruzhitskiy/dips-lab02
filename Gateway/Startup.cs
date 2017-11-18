@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Gateway.Services;
 using Gateway.Services.Implementations;
+using Gateway.Controllers;
 
 namespace Gateway
 {
@@ -31,11 +32,10 @@ namespace Gateway
         {
             services.AddMvc();
             
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
-
             services.AddTransient<IAccountsService, AccountsService>();
             services.AddTransient<ISubscriptionsService, SubscriptionsService>();
             services.AddTransient<INewsService, NewsService>();
+            services.AddTransient<GatewayController>();
         }
         
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -45,6 +45,8 @@ namespace Gateway
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseStaticFiles();
 
             app.UseAuthentication();
 

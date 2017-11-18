@@ -29,10 +29,10 @@ namespace NewsStorage
             services.AddMvc();
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("NewsConnection")));
+                //options.UseSqlServer(Configuration.GetConnectionString("NewsConnection")));
+                options.UseInMemoryDatabase("News"));
 
-            services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
-            services.AddTransient<ISubscriptionsService, SubscriptionsService>();
+            //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

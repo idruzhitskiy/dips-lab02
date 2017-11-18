@@ -1,0 +1,18 @@
+﻿@{
+    ViewData["Title"] = "Authenticate";
+}
+
+<div class="row">
+    <div class="col-md-2">
+        <form asp-controller="Users"
+              method="get">
+            <div class="form-group">
+                <label class="control-label">Username:</label>
+                <input name="username" class="form-control" type="text" required pattern="[a-zA-Z0-9]+" />
+            </div>
+            <input type="submit" class="btn btn-primary" asp-action="Register" value="Register" />
+            <input type="submit" class="btn btn-primary" asp-action="Login" value="Login" />
+        </form>
+    </div>
+</div>
+
