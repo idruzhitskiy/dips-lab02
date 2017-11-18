@@ -19,20 +19,20 @@ namespace Gateway.Services.Implementations
 
         public async Task<HttpResponseMessage> CheckIfUserExists(ExistsModel loginModel) => await PostJson("exists", loginModel);
 
-        public async Task<HttpResponseMessage> Register(RegisterModel userModel) => await PostJson("register", userModel);
+        public async Task<HttpResponseMessage> Register(UserModel userModel) => await PostJson("register", userModel);
 
-        public async Task<RegisterModel> DeleteUser(string username)
+        public async Task<UserModel> DeleteUser(string username)
         {
             var httpResponseMessage = await Delete(username);
             if (httpResponseMessage == null)
                 return null;
             if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
-                return new RegisterModel();
+                return new UserModel();
 
             string response = await httpResponseMessage.Content.ReadAsStringAsync();
             try
             {
-                return JsonConvert.DeserializeObject<RegisterModel>(response);
+                return JsonConvert.DeserializeObject<UserModel>(response);
             }
             catch
             {

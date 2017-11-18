@@ -10,8 +10,8 @@ namespace Gateway.Services
     public interface IAccountsService
     {
         Task<HttpResponseMessage> CheckIfUserExists(ExistsModel existsModel);
-        Task<HttpResponseMessage> Register(RegisterModel userModel);
-        Task<RegisterModel> DeleteUser(string username);
+        Task<HttpResponseMessage> Register(UserModel userModel);
+        Task<UserModel> DeleteUser(string username);
         Task<HttpResponseMessage> ChangeUserName(string username, string newUsername);
     }
 }

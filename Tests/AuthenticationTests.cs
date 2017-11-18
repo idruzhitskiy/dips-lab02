@@ -57,7 +57,7 @@ namespace Tests
             dbContext = GetDbContext(users);
             var accountsController = GetAccountsController();
 
-            var result = accountsController.Register(Mock.Of<RegisterModel>(um => um.Username == username )).Result;
+            var result = accountsController.Register(Mock.Of<UserModel>(um => um.Username == username )).Result;
             Assert.IsTrue(result is OkResult);
             Assert.IsTrue(users.Any(u => u.Name == username ));
         }
@@ -69,7 +69,7 @@ namespace Tests
             dbContext = GetDbContext(users);
             var accountsController = GetAccountsController();
 
-            var result = accountsController.Register(Mock.Of<RegisterModel>(um => um.Username == username )).Result;
+            var result = accountsController.Register(Mock.Of<UserModel>(um => um.Username == username )).Result;
             Assert.IsFalse(result is OkResult);
         }
 

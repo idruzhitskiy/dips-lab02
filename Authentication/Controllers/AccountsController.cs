@@ -42,7 +42,7 @@ namespace Authentication.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterModel userModel)
+        public async Task<IActionResult> Register([FromBody] UserModel userModel)
         {
             logger.LogDebug($"Register request, username: {userModel.Username}");
             User user = db.Users.FirstOrDefault(u => u.Name == userModel.Username);
@@ -68,7 +68,7 @@ namespace Authentication.Controllers
                 var result = db.Users.Remove(user);
                 logger.LogDebug($"User {user.Name} removed result: {result?.State}");
                 db.SaveChanges();
-                return Ok(new RegisterModel { Username = user.Name });
+                return Ok(new UserModel { Username = user.Name });
             }
             logger.LogWarning($"User {username} not found");
             return NotFound();

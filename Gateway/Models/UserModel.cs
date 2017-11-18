@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Gateway.Models
 {
-    public class RegisterModel
+    public class UserModel
     {
         public string Username { get; set; }
     }

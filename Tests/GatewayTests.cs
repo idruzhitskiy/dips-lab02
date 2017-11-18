@@ -17,7 +17,7 @@ namespace Tests
     [TestClass]
     public class GatewayTests
     {
-        private ILogger<MainController> logger;
+        private ILogger<GatewayController> logger;
         private IAccountsService accountsService;
         private ISubscriptionsService subscriptionsService;
         private INewsService newsService;
@@ -25,7 +25,7 @@ namespace Tests
         [TestInitialize]
         public void TestInitialize()
         {
-            var loggerMock = new Mock<ILogger<MainController>>();
+            var loggerMock = new Mock<ILogger<GatewayController>>();
             logger = loggerMock.Object;
             accountsService = GetAccountsService();
             newsService = GetNewsService();
@@ -38,7 +38,7 @@ namespace Tests
             accountsService = GetAccountsService(registerCode: HttpStatusCode.OK);
             var mainController = GetMainController();
 
-            var result = mainController.Register(Mock.Of<RegisterModel>(lm => lm.Username == "User")).Result;
+            var result = mainController.Register(Mock.Of<UserModel>(lm => lm.Username == "User")).Result;
             Assert.IsTrue(result is OkResult);
         }
 
@@ -48,7 +48,7 @@ namespace Tests
             accountsService = GetAccountsService(registerCode: HttpStatusCode.Unauthorized);
             var mainController = GetMainController();
 
-            var result = mainController.Register(Mock.Of<RegisterModel>(lm => lm.Username == "User")).Result;
+            var result = mainController.Register(Mock.Of<UserModel>(lm => lm.Username == "User")).Result;
             Assert.IsTrue(result is BadRequestObjectResult);
         }
 
@@ -58,7 +58,7 @@ namespace Tests
             accountsService = GetEmptyAccountsService();
             var mainController = GetMainController();
 
-            var result = mainController.Register(Mock.Of<RegisterModel>(lm => lm.Username == "User")).Result;
+            var result = mainController.Register(Mock.Of<UserModel>(lm => lm.Username == "User")).Result;
             Assert.IsTrue(result is NotFoundObjectResult);
         }
 
@@ -280,7 +280,7 @@ namespace Tests
         {
             return Mock.Of<IAccountsService>(srv =>
                 srv.CheckIfUserExists(It.IsAny<ExistsModel>()) == Task.FromResult(GetResponseMessage(loginCode)) &&
-                srv.Register(It.IsAny<RegisterModel>()) == Task.FromResult(GetResponseMessage(registerCode)));
+                srv.Register(It.IsAny<UserModel>()) == Task.FromResult(GetResponseMessage(registerCode)));
         }
 
         private INewsService GetNewsService(List<string> getNewsContent = null, HttpStatusCode addNewsCode = HttpStatusCode.OK)
@@ -305,9 +305,9 @@ namespace Tests
             return Mock.Of<ISubscriptionsService>();
         }
 
-        private MainController GetMainController()
+        private GatewayController GetMainController()
         {
-            return new MainController(logger, accountsService, subscriptionsService, newsService);
+            return new GatewayController(logger, accountsService, subscriptionsService, newsService);
         }
 
         private HttpResponseMessage GetResponseMessage(HttpStatusCode registerCode)

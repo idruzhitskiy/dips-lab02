@@ -48,7 +48,12 @@ namespace Gateway
 
             app.UseAuthentication();
 
-            app.UseMvc();
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Main}/{action=Index}/{id?}");
+            });
         }
     }
 }

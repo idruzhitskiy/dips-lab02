@@ -11,7 +11,7 @@ namespace Authentication.Entities
     public class User
     {
         public User() { }
-        public User(RegisterModel model)
+        public User(UserModel model)
         {
             this.Name = model.Username;
         }
