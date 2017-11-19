@@ -189,10 +189,10 @@ namespace Gateway.Controllers
                 if (authors == null)
                 {
                     logger.LogCritical("Subscriptions service unavailable");
-                    news = await newsService.GetNews();
                 }
                 else
                 {
+                    authors = authors.Concat(new[] { name }).ToList();
                     foreach (var author in authors)
                     {
                         PaginatedList<string> paginatedList = (await newsService.GetNewsByUser(author, page, perpage));
