@@ -9,7 +9,7 @@ namespace Gateway.Models.Subscriptions
     public class IndexModel
     {
         [Required]
-        [DataType(DataType.Text, ErrorMessage = "Input author")]
+        [DataType(DataType.Text, ErrorMessage = "Input username")]
         [RegularExpression(@"[a-zA-Z0-9]+", ErrorMessage = "Input correct username (Only letters and numbers are allowed)")]
         public string Username { get; set; }
         public List<string> Authors { get; set; } = new List<string>();

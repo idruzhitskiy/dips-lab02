@@ -104,8 +104,6 @@ namespace NewsStorage.Controllers
                 else
                     message = $"News from author with username {newUsername} already exists";
             }
-            else
-                message = $"News from author with username {username} not found";
 
             logger.LogDebug(message);
             if (string.IsNullOrWhiteSpace(message))

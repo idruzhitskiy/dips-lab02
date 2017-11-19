@@ -2,21 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Gateway.Models.Subscriptions;
-using Gateway.Services;
-using Gateway.Models.Shared;
+using Gateway.Models.News;
 using Gateway.Pagination;
+using Gateway.Models.Shared;
 
 namespace Gateway.Controllers
 {
-    [Route("subscriptions")]
-    public class SubscriptionsController : Controller
+    [Route("news")]
+    public class NewsController : Controller
     {
         private GatewayController gatewayController;
 
-        public SubscriptionsController(GatewayController gatewayController)
+        public NewsController(GatewayController gatewayController)
         {
             this.gatewayController = gatewayController;
         }
@@ -26,11 +24,21 @@ namespace Gateway.Controllers
         {
             if (ModelState.IsValid)
             {
-                var authorsResponse = await gatewayController.GetSubscribedAuthors(indexModel.Username, indexModel.Page, indexModel.Size);
+                var authorsResponse = await gatewayController.GetNews(indexModel.Username, indexModel.Page, indexModel.Size);
                 if (authorsResponse.StatusCode == 200)
                 {
-                    PaginatedList<string> paginatedList = authorsResponse.Value as PaginatedList<string>;
-                    indexModel.Authors = paginatedList.Content;
+                    PaginatedList<string> paginatedList = (authorsResponse.Value as PaginatedList<string>);
+                    indexModel.News = paginatedList.Content.Select(s =>
+                    {
+                        var arr = s.Split(Environment.NewLine);
+                        var header = arr[0];
+                        header = header.Substring(header.IndexOf(' '));
+                        var body = arr[1];
+                        body = body.Substring(body.IndexOf(' '));
+                        var author = arr[2];
+                        author = author.Substring(author.IndexOf(' '));
+                        return new Tuple<string, string, string>(header, body, author);
+                    }).ToList();
                     indexModel.Page = paginatedList.Page;
                     indexModel.MaxPage = paginatedList.MaxPage;
                     indexModel.Size = paginatedList.Size;
@@ -49,16 +57,6 @@ namespace Gateway.Controllers
             return View();
         }
 
-        [HttpGet("delete")]
-        public async Task<IActionResult> Delete(string username, string author)
-        {
-            var result = await gatewayController.RemoveSubscription(username, author);
-            if (result.StatusCode == 200)
-                return RedirectToAction(nameof(Index), new IndexModel { Username = username });
-            else
-                return RedirectToAction("Error", new ErrorModel(result));
-        }
-
         [HttpGet("add")]
         public async Task<IActionResult> Add(string username)
         {
@@ -68,11 +66,10 @@ namespace Gateway.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> Add(AddModel addModel)
         {
-            var result = await gatewayController.AddSubscription(addModel.Username, addModel.Author);
+            var result = await gatewayController.AddNews(new Models.NewsModel { Author = addModel.Username, Body = addModel.Body, Header = addModel.Header });
             if (result.StatusCode == 200)
                 return RedirectToAction(nameof(Index), new IndexModel { Username = addModel.Username });
-            else
-                return View("Error", new ErrorModel(result));
+            return View("Error", new ErrorModel(result));
         }
     }
 }

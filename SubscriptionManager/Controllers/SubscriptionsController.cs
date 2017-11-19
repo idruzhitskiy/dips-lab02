@@ -136,8 +136,6 @@ namespace SubscriptionManager.Controllers
                 else
                     message = $"Subscriptions for/by user with username {newUsername} already exists";
             }
-            else
-                message = $"Subscriptions for/by user with username {username} not found";
 
             logger.LogDebug(message);
             if (string.IsNullOrWhiteSpace(message))

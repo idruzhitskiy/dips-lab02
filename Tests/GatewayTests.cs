@@ -268,7 +268,7 @@ namespace Tests
         private ISubscriptionsService GetSubscriptionsService(List<string> authors = null, HttpStatusCode addCode = HttpStatusCode.OK, HttpStatusCode removeCode = HttpStatusCode.OK)
         {
             return Mock.Of<ISubscriptionsService>(srv =>
-                srv.GetSubscribedAuthorsForName(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()) == Task.FromResult(authors) &&
+                //srv.GetSubscribedAuthorsForName(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()) == Task.FromResult(authors) &&
                 srv.AddSubscription(It.IsAny<string>(), It.IsAny<string>()) == Task.FromResult(GetResponseMessage(addCode)) &&
                 srv.RemoveSubscription(It.IsAny<string>(), It.IsAny<string>()) == Task.FromResult(GetResponseMessage(removeCode)));
         }

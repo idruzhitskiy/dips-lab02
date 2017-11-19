@@ -50,7 +50,7 @@ namespace Gateway.Controllers
             return RedirectToAction(nameof(Index), new IndexModel { Username = username });
         }
 
-        [HttpGet("Delete")]
+        [HttpGet("delete")]
         public async Task<IActionResult> Delete(string username, bool submit = false)
         {
             if (submit)
@@ -61,6 +61,18 @@ namespace Gateway.Controllers
                 return View("Error", new ErrorModel(result));
             }
             return View(nameof(Delete), username);
+        }
+
+        [HttpGet("change")]
+        public async Task<IActionResult> Change(string username, string newUsername)
+        {
+            if (string.IsNullOrWhiteSpace(newUsername))
+                return View(nameof(Change), username);
+
+            var result = await gatewayController.ChangeUserName(username, newUsername);
+            if (result.StatusCode == 200)
+                return RedirectToAction(nameof(Index), new IndexModel { Username = newUsername });
+            return View("Error", new ErrorModel(result));
         }
     }
 }

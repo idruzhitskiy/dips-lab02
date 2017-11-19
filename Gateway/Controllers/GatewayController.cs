@@ -181,7 +181,7 @@ namespace Gateway.Controllers
             if (userExists == null)
                 message = "Accounts service unavailable";
             else if (!userExists.IsSuccessStatusCode)
-                message = $"User doesn't exist, response: {userExists}";
+                message = $"User doesn't exist";
             else
             {
                 List<string> authors = (await subscriptionsService.GetSubscribedAuthorsForName(name, 0, 0)).Content;
