@@ -151,7 +151,7 @@ namespace Gateway.Controllers
                         return false;
                     }
                 });
-                return StatusCode(503, "Services status: " +
+                return StatusCode(200, "Services status: " +
                     $"AS: {(accountsResult != null ? "online" : "offline")};" +
                     $"NS: {(newsResult != null ? "online" : "offline")};" +
                     $"SS: {(subscriptionsResult != null ? "online" : "offline")};");
@@ -184,7 +184,7 @@ namespace Gateway.Controllers
                 message = $"User doesn't exist";
             else
             {
-                List<string> authors = (await subscriptionsService.GetSubscribedAuthorsForName(name, 0, 0)).Content;
+                List<string> authors = (await subscriptionsService.GetSubscribedAuthorsForName(name, 0, 0))?.Content;
                 IEnumerable<string> news = Enumerable.Empty<string>();
                 if (authors == null)
                 {
@@ -205,9 +205,13 @@ namespace Gateway.Controllers
                     }
                 }
 
-                if (news != null)
+                if (news != null && news.Count() > 0)
                 {
                     return StatusCode(200, new PaginatedList<string>(news.ToList(), perpage, page, maxPage));
+                }
+                else if (news != null)
+                {
+                    return StatusCode(200, "");
                 }
                 else
                     message = "News service unavailable";

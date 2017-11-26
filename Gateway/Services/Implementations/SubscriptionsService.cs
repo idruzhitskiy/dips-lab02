@@ -11,13 +11,13 @@ namespace Gateway.Services.Implementations
 {
     public class SubscriptionsService : Service, ISubscriptionsService
     {
-        public SubscriptionsService(IConfiguration configuration) 
+        public SubscriptionsService(IConfiguration configuration)
             : base(configuration.GetSection("Addresses")["Subscriptions"]) { }
 
         public async Task<PaginatedList<string>> GetSubscribedAuthorsForName(string name, int page, int perpage)
         {
             var httpResponseMessage = await Get($"{name}?page={page}&perpage={perpage}");
-            if (httpResponseMessage == null || httpResponseMessage.Content == null)
+            if (httpResponseMessage == null || httpResponseMessage.StatusCode == System.Net.HttpStatusCode.Forbidden || httpResponseMessage.Content == null)
                 return null;
             try
             {

@@ -31,11 +31,16 @@ namespace Gateway
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            
             services.AddTransient<IAccountsService, AccountsService>();
             services.AddTransient<ISubscriptionsService, SubscriptionsService>();
             services.AddTransient<INewsService, NewsService>();
             services.AddTransient<GatewayController>();
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
         }
         
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -45,9 +50,8 @@ namespace Gateway
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseCors("MyPolicy");
             app.UseStaticFiles();
-
             app.UseAuthentication();
 
             app.UseMvc(routes =>

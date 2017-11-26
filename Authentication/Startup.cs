@@ -34,6 +34,12 @@ namespace Authentication
             services.AddDbContext<ApplicationDbContext>(options =>
                 //options.UseSqlServer(Configuration.GetConnectionString("AuthConnection")));
                 options.UseInMemoryDatabase("Authentication"));
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
 
             //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
@@ -45,7 +51,7 @@ namespace Authentication
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseCors("MyPolicy");
             app.UseMvc();
         }
     }

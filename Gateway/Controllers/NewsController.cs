@@ -24,10 +24,13 @@ namespace Gateway.Controllers
         {
             if (ModelState.IsValid)
             {
-                var authorsResponse = await gatewayController.GetNews(indexModel.Username, indexModel.Page, indexModel.Size);
-                if (authorsResponse.StatusCode == 200)
+                var news = await gatewayController.GetNews(indexModel.Username, indexModel.Page, indexModel.Size);
+                if (news.StatusCode == 200)
                 {
-                    PaginatedList<string> paginatedList = (authorsResponse.Value as PaginatedList<string>);
+                    if (news.Value as string != null && string.IsNullOrWhiteSpace(news.Value as string))
+                        return View(indexModel);
+
+                    PaginatedList<string> paginatedList = (news.Value as PaginatedList<string>);
                     indexModel.News = paginatedList.Content.Select(s =>
                     {
                         var arr = s.Split(Environment.NewLine);
@@ -45,7 +48,7 @@ namespace Gateway.Controllers
                     return View(indexModel);
                 }
                 else
-                    return View("Error", new ErrorModel(authorsResponse));
+                    return View("Error", new ErrorModel(news));
             }
             else
                 return RedirectToAction(nameof(Authenticate));
