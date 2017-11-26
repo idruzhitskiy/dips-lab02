@@ -29,7 +29,12 @@ namespace SubscriptionManager
             services.AddDbContext<ApplicationDbContext>(options =>
                //options.UseSqlServer(Configuration.GetConnectionString("SubsConnection")));
                options.UseInMemoryDatabase("Subscription"));
-
+            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            }));
             //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 
@@ -40,7 +45,7 @@ namespace SubscriptionManager
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseCors("MyPolicy");
             app.UseMvc();
         }
     }

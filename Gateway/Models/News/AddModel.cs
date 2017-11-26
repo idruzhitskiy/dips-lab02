@@ -11,7 +11,7 @@ namespace Gateway.Models.News
         public string Username { get; set; }
         [Required]
         [DataType(DataType.Text, ErrorMessage = "Input header")]
-        [RegularExpression(@"[a-zA-Z0-9 ]+", ErrorMessage = "Input correct username (nly letters and numbers are allowed)")]
+        [RegularExpression(@"[a-zA-Z0-9 ]+", ErrorMessage = "Input correct header (only letters, numbers and spaces are allowed)")]
         public string Header { get; set; }
         [Required]
         [DataType(DataType.Text, ErrorMessage = "Input body")]

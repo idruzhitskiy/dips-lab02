@@ -20,6 +20,7 @@ namespace SubscriptionManager
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
+                .UseUrls("http://localhost:51874/")
                 .Build();
     }
 }
