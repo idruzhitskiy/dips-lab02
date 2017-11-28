@@ -12,10 +12,10 @@ namespace AuthServer
 {
     public class ApplicationDbContext : DbContext, IResourceStore, IClientStore
     {
-        public DbSet<Client> Clients { get; set; }
-        public DbSet<ApiResource> ApiResources { get; set; }
-        public DbSet<IdentityResource> IdentityResources { get; set; }
-        public DbSet<User> Users { get; set; }
+        public List<Client> Clients { get; set; } = new List<Client>();
+        public List<ApiResource> ApiResources { get; set; } = new List<ApiResource>();
+        public List<IdentityResource> IdentityResources { get; set; } = new List<IdentityResource>();
+        public List<User> Users { get; set; } = new List<User>();
 
         private const string scopeAllowAll = "scope.allowall";
 
@@ -38,12 +38,16 @@ namespace AuthServer
 
             if (!Clients.Any())
             {
-                Clients.AddRange(
+                Clients.Add(
                     new Client
                     {
-                        ClientId = "Gateway",
-                        AllowedGrantTypes = GrantTypes.ClientCredentials,
+                        ClientId = "gateway",
+                        ClientName = "Gateway",
+                        AllowedGrantTypes = GrantTypes.Code,
                         AllowOfflineAccess = true,
+                        Enabled = true,
+                        RedirectUris= new List<string> { "gateway.loc" },
+                        PostLogoutRedirectUris = new List<string> { "gateway.loc" },
                         ClientSecrets =
                         {
                             new Secret("secret".Sha256())
@@ -73,7 +77,7 @@ namespace AuthServer
 
         public async Task<ApiResource> FindApiResourceAsync(string name)
         {
-            return await ApiResources.FirstOrDefaultAsync(r => r.Name == name);
+            return ApiResources.FirstOrDefault(r => r.Name == name);
         }
 
         public async Task<Resources> GetAllResourcesAsync()
@@ -83,7 +87,7 @@ namespace AuthServer
 
         public async Task<Client> FindClientByIdAsync(string clientId)
         {
-            return await Clients.FirstOrDefaultAsync(c => c.ClientId == clientId);
+            return Clients.FirstOrDefault(c => c.ClientId == clientId);
         }
     }
 }

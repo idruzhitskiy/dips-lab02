@@ -36,7 +36,7 @@ namespace Tests
             dbContext = GetDbContext(new List<User> { new User { Name = username } });
             var accountsController = GetAccountsController();
 
-            var result = accountsController.CheckIfUserExists(Mock.Of<ExistsModel>(lm => lm.Username == username)).Result;
+            var result = accountsController.CheckIfUserExists(Mock.Of<UserModel>(lm => lm.Username == username)).Result;
             Assert.IsTrue(result is OkResult);
         }
 
@@ -46,7 +46,7 @@ namespace Tests
             dbContext = GetDbContext(new List<User> { new User { Name = username.Substring(1)} });
             var accountsController = GetAccountsController();
 
-            var result = accountsController.CheckIfUserExists(Mock.Of<ExistsModel>(lm => lm.Username == username)).Result;
+            var result = accountsController.CheckIfUserExists(Mock.Of<UserModel>(lm => lm.Username == username)).Result;
             Assert.IsFalse(result is OkResult);
         }
 

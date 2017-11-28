@@ -279,7 +279,7 @@ namespace Tests
             HttpStatusCode removeClaimCode = HttpStatusCode.OK)
         {
             return Mock.Of<IAccountsService>(srv =>
-                srv.CheckIfUserExists(It.IsAny<ExistsModel>()) == Task.FromResult(GetResponseMessage(loginCode)) &&
+                srv.CheckIfUserExists(It.IsAny<UserModel>()) == Task.FromResult(GetResponseMessage(loginCode)) &&
                 srv.Register(It.IsAny<UserModel>()) == Task.FromResult(GetResponseMessage(registerCode)));
         }
 

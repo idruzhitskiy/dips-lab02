@@ -13,8 +13,8 @@
                 <label class="control-label">Password:</label>
                 <input asp-for="Password" class="form-control" type="password" required title="Input password" />
             </div>
-            <input type="submit" class="btn btn-primary" asp-action="Register" value="Register" />
-            <input type="submit" class="btn btn-primary" asp-action="Login" value="Login" />
+            <input type="submit" class="btn btn-primary" asp-action="Register" asp-route-redirect="@Context.Request.Query["Redirect"]" value="Register" />
+            <input type="submit" class="btn btn-primary" asp-action="Login" asp-route-redirect="@Context.Request.Query["Redirect"]" value="Login" />
         </form>
     </div>
 </div>

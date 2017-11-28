@@ -60,8 +60,8 @@ namespace Gateway
             {
                 app.UseDeveloperExceptionPage();
             }
-            //app.UseMiddleware<CustomAuthorizationMiddleware>();
-            //app.UseAuthentication();
+            app.UseMiddleware<GatewayCustomAuthorizationMiddleware>();
+            app.UseAuthentication();
             app.UseStaticFiles();
             app.UseMvc();
             

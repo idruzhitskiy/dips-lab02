@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,9 +25,21 @@ namespace Gateway.Services
 
         protected async Task<HttpResponseMessage> PostJson(string addr, object obj)
         {
+    //        var handler = new HttpClientHandler
+    //        {
+    //            ClientCertificateOptions = ClientCertificateOption.Manual,
+    //            ServerCertificateCustomValidationCallback =
+    //            (httpRequestMessage, cert, cetChain, policyErrors) =>
+    //            {
+    //                return true;
+    //            }
+    //        };
+    //        ServicePointManager.ServerCertificateValidationCallback +=
+    //(sender, cert, chain, sslPolicyErrors) => true;
+            // comparable to modern browsers
             using (var client = new HttpClient())
                 try
-                {
+                { 
                     await EstablishConnection(client);
                     return await client.PostAsync(GetAddress(addr), new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json"));
                 }

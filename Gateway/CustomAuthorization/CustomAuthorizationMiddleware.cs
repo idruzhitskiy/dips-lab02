@@ -9,18 +9,12 @@ using System.Threading.Tasks;
 
 namespace Gateway.CustomAuthorization
 {
-    public class CustomAuthorizationMiddleware
+    public abstract class CustomAuthorizationMiddleware
     {
-        private const string authorizationWord = "Authorization";
-        private List<(string, string)> allowedApps = new List<(string,string)> { ("AppId", "AppSecret") };
+        public static string AuthorizationWord = "Authorization";
+        public static string UserWord = "User";
         private readonly RequestDelegate _next;
-        private readonly TokensStore tokensStore;
-        private List<string> anonymousPaths = new List<string>
-        {
-            "api",
-            "login",
-            "authenticate"
-        };
+        protected readonly TokensStore tokensStore;
 
         public CustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore)
         {
@@ -28,53 +22,29 @@ namespace Gateway.CustomAuthorization
             this.tokensStore = tokensStore;
         }
 
-        public async Task Invoke(HttpContext context)
+        public virtual async Task Invoke(HttpContext context)
         {
-            if (RequestedToken(context))
+            if (context.Request.Headers.Keys.Contains(AuthorizationWord))
             {
-                context.Response.StatusCode = 200;
-                await context.Response.WriteAsync(tokensStore.GetToken(Guid.NewGuid().ToString(), TimeSpan.FromSeconds(5)));
-                return;
+                var auth = context.Request.Headers[AuthorizationWord];
+                await CheckAuthorization(context, auth);
             }
-
-            if (!context.Request.Path.Value.Split('/').Intersect(anonymousPaths).Any())
+            else if (context.Request.Cookies.Keys.Contains(AuthorizationWord))
             {
-                if(context.Request.Headers.Keys.Contains(authorizationWord))
-                {
-                    var auth = context.Request.Headers[authorizationWord];
-                    await CheckAuthorization(context, auth);
-                }
-                else if (context.Request.Cookies.Keys.Contains(authorizationWord))
-                {
-                    var auth = context.Request.Cookies[authorizationWord];
-                    await CheckAuthorization(context, auth);
-                }
-                else
-                {
-                    var message = "No authorization header provided";
-                    await ReturnForbidden(context, message);
-                }
+                var auth = context.Request.Cookies[AuthorizationWord];
+                await CheckAuthorization(context, auth);
             }
-            else
+            else if (context.Request.Path.Value.Split('/').Intersect(GetAnonymousPaths()).Any())
             {
                 await this._next(context);
             }
+            else
+            {
+                var message = "No authorization header provided";
+                await ReturnForbidden(context, message);
+            }
         }
 
-        private bool RequestedToken(HttpContext context)
-        {
-            if (context.Request.Headers.Keys.Contains("Authorization"))
-            {
-                var match = Regex.Match(string.Join(string.Empty, context.Request.Headers["Authorization"]), @"Basic (\S+)");
-                if (match.Groups.Count > 1)
-                {
-                    var appIdAndSecret = Encoding.UTF8.GetString(Convert.FromBase64String(match.Groups[1].Value)).Split(':');
-                    if (allowedApps.Contains((appIdAndSecret[0], appIdAndSecret[1])))
-                        return true;
-                }
-            }
-            return false;
-        }
 
         private async Task CheckAuthorization(HttpContext context, string auth)
         {
@@ -88,7 +58,10 @@ namespace Gateway.CustomAuthorization
                 var token = match.Groups[1].Value;
                 var result = tokensStore.CheckToken(token);
                 if (result == CheckTokenResult.Valid)
+                {
+                    context.Request.Headers.Add(UserWord, tokensStore.GetNameByToken(token));
                     await this._next(context);
+                }
                 else if (result == CheckTokenResult.Expired)
                     await ReturnForbidden(context, "Token has expired");
                 else
@@ -96,13 +69,8 @@ namespace Gateway.CustomAuthorization
             }
         }
 
-        private static async Task ReturnForbidden(HttpContext context, string message)
-        {
-            using (var writer = new StreamWriter(context.Response.Body))
-            {
-                context.Response.StatusCode = 401; 
-                await writer.WriteAsync(message);
-            }
-        }
+        public abstract Task ReturnForbidden(HttpContext context, string message);
+
+        public abstract List<string> GetAnonymousPaths();
     }
 }

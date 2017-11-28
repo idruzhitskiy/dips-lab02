@@ -20,7 +20,7 @@ namespace Authentication
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseUrls("http://localhost:58491/")
+                .UseUrls("http://localhost:59257/")
                 .Build();
     }
 }

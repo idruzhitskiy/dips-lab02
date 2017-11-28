@@ -27,6 +27,12 @@ namespace Authentication.Controllers
             this.logger = logger;
         }
 
+        [HttpGet("check")]
+        public async Task<IActionResult> Check()
+        {
+            return Ok();
+        }
+
         [HttpPost("exists")]
         public async Task<IActionResult> CheckIfUserExists([FromBody] UserModel userModel)
         {
@@ -58,7 +64,7 @@ namespace Authentication.Controllers
                 }
             }
             logger.LogWarning($"User {userModel.Username} not found");
-            return Unauthorized();
+            return StatusCode(500, "User not found");
         }
 
         [HttpPost("register")]

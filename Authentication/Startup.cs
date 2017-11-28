@@ -47,7 +47,7 @@ namespace Authentication
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseMiddleware<CustomAuthorizationMiddleware>();
+            app.UseMiddleware<ServiceCustomAuthorizationMiddleware>();
             app.UseCors("MyPolicy");
             app.UseMvc();
         }

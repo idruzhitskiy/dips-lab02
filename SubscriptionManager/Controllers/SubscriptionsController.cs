@@ -22,6 +22,12 @@ namespace SubscriptionManager.Controllers
             this.logger = logger;
         }
 
+        [HttpGet("check")]
+        public async Task<IActionResult> Check()
+        {
+            return Ok();
+        }
+
         [HttpGet("{subscriber}")]
         public async Task<PaginatedList<string>> GetAuthorsForName(string subscriber, int page, int perpage)
         {

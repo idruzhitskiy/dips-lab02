@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Gateway.Models.News;
 using Gateway.Pagination;
 using Gateway.Models.Shared;
+using Gateway.CustomAuthorization;
 
 namespace Gateway.Controllers
 {
@@ -22,7 +23,9 @@ namespace Gateway.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(IndexModel indexModel)
         {
-            if (ModelState.IsValid)
+            if (Request.Headers.Keys.Contains(CustomAuthorizationMiddleware.UserWord))
+                indexModel.Username = string.Join(string.Empty, Request.Headers[CustomAuthorizationMiddleware.UserWord]);
+            if (!string.IsNullOrWhiteSpace(indexModel.Username))
             {
                 var news = await gatewayController.GetNews(indexModel.Username, indexModel.Page, indexModel.Size);
                 if (news.StatusCode == 200)

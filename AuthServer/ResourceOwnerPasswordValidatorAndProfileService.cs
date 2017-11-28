@@ -24,7 +24,7 @@ namespace AuthServer
         {
             try
             {
-                var user = await applicationDbContext.Users.FirstOrDefaultAsync(u => u.Username == context.UserName);
+                var user = applicationDbContext.Users.FirstOrDefault(u => u.Username == context.UserName);
                 if (user != null)
                 {
                     if (user.Password == context.Password.Sha256())
@@ -65,7 +65,7 @@ namespace AuthServer
             {
                 if (!string.IsNullOrEmpty(context.Subject.Identity.Name))
                 {
-                    var user = await applicationDbContext.Users.FirstOrDefaultAsync(u => u.Username == context.Subject.Identity.Name);
+                    var user = applicationDbContext.Users.FirstOrDefault(u => u.Username == context.Subject.Identity.Name);
 
                     if (user != null)
                     {
@@ -84,7 +84,7 @@ namespace AuthServer
                     if (!string.IsNullOrEmpty(userId?.Value) && long.Parse(userId.Value) > 0)
                     {
                         //get user from db (find user by user id)
-                        var user = await applicationDbContext.Users.FirstOrDefaultAsync(u => u.Id == int.Parse(userId.Value));
+                        var user = applicationDbContext.Users.FirstOrDefault(u => u.Id == int.Parse(userId.Value));
 
                         // issue the claims for the user
                         if (user != null)

@@ -8,6 +8,7 @@ using Gateway.Models.Subscriptions;
 using Gateway.Services;
 using Gateway.Models.Shared;
 using Gateway.Pagination;
+using Gateway.CustomAuthorization;
 
 namespace Gateway.Controllers
 {
@@ -24,7 +25,9 @@ namespace Gateway.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(IndexModel indexModel)
         {
-            if (ModelState.IsValid)
+            if (Request.Headers.Keys.Contains(CustomAuthorizationMiddleware.UserWord))
+                indexModel.Username = string.Join(string.Empty, Request.Headers[CustomAuthorizationMiddleware.UserWord]);
+            if (!string.IsNullOrWhiteSpace(indexModel.Username))
             {
                 var authorsResponse = await gatewayController.GetSubscribedAuthors(indexModel.Username, indexModel.Page, indexModel.Size);
                 if (authorsResponse.StatusCode == 200)

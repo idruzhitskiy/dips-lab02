@@ -20,6 +20,7 @@ namespace AuthServer
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
+                .UseUrls("http://localhost:58491/")
                 .Build();
     }
 }

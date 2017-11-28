@@ -23,14 +23,27 @@ namespace Gateway.Controllers
         }
         public async Task<IActionResult> Index(IndexModel indexModel)
         {
-            if (ModelState.IsValid)
+            if (Request.Headers.Keys.Contains(CustomAuthorizationMiddleware.UserWord))
+                indexModel.Username = string.Join(string.Empty, Request.Headers[CustomAuthorizationMiddleware.UserWord]);
+            if (!string.IsNullOrWhiteSpace(indexModel.Username))
                 return View(indexModel);
             else
                 return RedirectToAction(nameof(Authenticate));
         }
 
-        [HttpGet("authenticate")]
-        public async Task<IActionResult> Authenticate()
+        [HttpGet("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            if (Request.Cookies.Keys.Contains(CustomAuthorizationMiddleware.AuthorizationWord))
+            {
+                var cookie = Request.Cookies[CustomAuthorizationMiddleware.AuthorizationWord];
+                Response.Cookies.Append(CustomAuthorizationMiddleware.AuthorizationWord, cookie, new Microsoft.AspNetCore.Http.CookieOptions { Expires = DateTime.Now.AddDays(-1) });
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet("auth")]
+        public async Task<IActionResult> Authenticate(AuthenticationModel authenticationModel)
         {
             return View();
         }
@@ -41,7 +54,7 @@ namespace Gateway.Controllers
             var result = await gatewayController.Register(new Models.UserModel { Username = authenticationModel.Username, Password = authenticationModel.Password });
             if (result.StatusCode != 200)
                 return View("Error", new ErrorModel(result));
-            return RedirectToAction(nameof(Index), new IndexModel { Username = authenticationModel.Username });
+            return await Login(authenticationModel);
         }
 
         [HttpPost("login")]
@@ -53,14 +66,11 @@ namespace Gateway.Controllers
             else
             {
                 var token = tokenStore.GetToken(authenticationModel.Username, TimeSpan.FromMinutes(10));
-                Response.Cookies.Append("Authorization", $"Bearer {token}");
-                //Response.Headers.Add("Authorization", $"Bearer {token}");
-                return RedirectToAction(nameof(Index), new IndexModel { Username = authenticationModel.Username});
+                Response.Cookies.Append(CustomAuthorizationMiddleware.AuthorizationWord, $"Bearer {token}");
+                if (authenticationModel.Redirect != null)
+                    return Redirect(authenticationModel.Redirect);
+                return RedirectToAction(nameof(Index), new IndexModel ());
             }
-            //var result = await gatewayController.CheckIfUserExist(new Models.UserModel { Username = username });
-            //if (result.StatusCode != 200)
-            //    return View("Error", new ErrorModel(result));
-            //return RedirectToAction(nameof(Index), new IndexModel { Username = username });
         }
 
         [HttpGet("delete")]
@@ -70,7 +80,7 @@ namespace Gateway.Controllers
             {
                 var result = await gatewayController.DeleteUser(username);
                 if (result.StatusCode == 200)
-                    return RedirectToAction(nameof(Index));
+                    return await Logout();
                 return View("Error", new ErrorModel(result));
             }
             return View(nameof(Delete), username);
@@ -81,12 +91,11 @@ namespace Gateway.Controllers
         {
             if (string.IsNullOrWhiteSpace(newUsername))
             {
-                Response.Headers.Add("Authorization", Request.Headers["Authorization"]);
                 return View(nameof(Change), username);
             }
             var result = await gatewayController.ChangeUserName(username, newUsername);
             if (result.StatusCode == 200)
-                return RedirectToAction(nameof(Index), new IndexModel { Username = newUsername });
+                return await Logout();
             return View("Error", new ErrorModel(result));
         }
     }

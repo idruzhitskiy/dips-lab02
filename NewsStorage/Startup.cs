@@ -43,7 +43,7 @@ namespace NewsStorage
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseMiddleware<CustomAuthorizationMiddleware>();
+            app.UseMiddleware<ServiceCustomAuthorizationMiddleware>();
             app.UseMvc();
         }
     }

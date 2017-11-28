@@ -26,6 +26,12 @@ namespace NewsStorage.Controllers
             this.logger = logger;
         }
 
+        [HttpGet("check")]
+        public async Task<IActionResult> Check()
+        {
+            return Ok();
+        }
+
         [HttpPost("")]
         public async Task<IActionResult> AddNews([FromBody] NewsModel newsModel)
         {

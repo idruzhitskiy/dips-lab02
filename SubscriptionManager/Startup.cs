@@ -42,7 +42,7 @@ namespace SubscriptionManager
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseMiddleware<CustomAuthorizationMiddleware>();
+            app.UseMiddleware<ServiceCustomAuthorizationMiddleware>();
             app.UseMvc();
         }
     }

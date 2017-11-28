@@ -35,6 +35,13 @@ namespace Gateway.CustomAuthorization
             tokens.Add(token, (owner, expiry, DateTime.Now));
             return token;
         }
+
+        public string GetNameByToken(string token)
+        {
+            if (tokens.Keys.Contains(token))
+                return tokens[token].Item1;
+            return null;
+        }
     }
 
     public enum CheckTokenResult
