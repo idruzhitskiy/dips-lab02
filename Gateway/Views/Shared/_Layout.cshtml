@@ -6,9 +6,43 @@
 <html>
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.6/jquery.validate.unobtrusive.js"></script>
+    <script>
+        function getCookie(name) {
+            var matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
+        //$(document).ready(function () {
+        //    $('a').each(function () {
+        //        $(this).click(function (event) {
+        //            event.preventDefault();
+        //            $.ajax({
+        //                type: 'GET',
+        //                url: $(this).attr('href'),
+        //                headers: {
+        //                    Authorization: getCookie('Authorization'),
+        //                },
+        //                contentType: 'application/x-www-form-urlencoded',
+        //                async: false,
+        //                success: function (data, textStatus) {
+        //                    console.log('Success function')
+        //                    console.log(data)
+
+        //                    window.location.href = data.url;
+        //                    if (data.redirect) {
+        //                        console.log('rediredt')
+        //                        window.location.href = data.redirect;
+        //                    }
+        //                }
+        //            });
+        //        });
+        //    });
+        //});
+    </script>
 </head>
 <body>
     <div class="navbar navbar-inverse navbar-static-top">

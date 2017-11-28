@@ -18,6 +18,7 @@ using Gateway.Controllers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using IdentityServer4.AccessTokenValidation;
+using Gateway.CustomAuthorization;
 
 namespace Gateway
 {
@@ -38,13 +39,15 @@ namespace Gateway
             services.AddTransient<ISubscriptionsService, SubscriptionsService>();
             services.AddTransient<INewsService, NewsService>();
             services.AddTransient<GatewayController>();
+            services.AddSingleton<TokensStore>();
+
             services.AddLogging(lb => lb.AddConsole());
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(o =>
             {
                 o.Authority = "http://localhost:59257";
                 o.RequireHttpsMetadata = false;
-                o.ApiName = "scope.readaccess";
+                o.ApiName = "scope.allowall";
             });
             services.AddMvc();
 
@@ -57,24 +60,11 @@ namespace Gateway
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseCors(policy =>
-            {
-                policy.WithOrigins(
-                    "http://localhost:59257");
-
-                policy.AllowAnyHeader();
-                policy.AllowAnyMethod();
-                policy.WithExposedHeaders("WWW-Authenticate");
-            });
-            app.UseAuthentication();
+            //app.UseMiddleware<CustomAuthorizationMiddleware>();
+            //app.UseAuthentication();
             app.UseStaticFiles();
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Main}/{action=Index}/{id?}");
-            });
-
+            app.UseMvc();
+            
         }
     }
 }

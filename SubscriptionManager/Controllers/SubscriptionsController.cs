@@ -10,7 +10,7 @@ using Gateway.Pagination;
 
 namespace SubscriptionManager.Controllers
 {
-    [Route("api")]
+    [Route("")]
     public class SubscriptionsController : Controller
     {
         private ApplicationDbContext db;

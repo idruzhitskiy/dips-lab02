@@ -9,7 +9,8 @@ namespace Gateway.Services
 {
     public interface IAccountsService
     {
-        Task<HttpResponseMessage> CheckIfUserExists(ExistsModel existsModel);
+        Task<HttpResponseMessage> CheckIfUserExists(UserModel existsModel);
+        Task<HttpResponseMessage> Login(UserModel userModel);
         Task<HttpResponseMessage> Register(UserModel userModel);
         Task<UserModel> DeleteUser(string username);
         Task<HttpResponseMessage> ChangeUserName(string username, string newUsername);

@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+using Gateway.CustomAuthorization;
 
 namespace SubscriptionManager
 {
@@ -29,12 +30,8 @@ namespace SubscriptionManager
             services.AddDbContext<ApplicationDbContext>(options =>
                //options.UseSqlServer(Configuration.GetConnectionString("SubsConnection")));
                options.UseInMemoryDatabase("Subscription"));
-            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
-            {
-                builder.AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
-            }));
+            services.AddSingleton<TokensStore>();
+
             //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 
@@ -45,7 +42,7 @@ namespace SubscriptionManager
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseCors("MyPolicy");
+            app.UseMiddleware<CustomAuthorizationMiddleware>();
             app.UseMvc();
         }
     }

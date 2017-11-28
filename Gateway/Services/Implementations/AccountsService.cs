@@ -17,7 +17,7 @@ namespace Gateway.Services.Implementations
         public AccountsService(IConfiguration configuration) : 
             base(configuration.GetSection("Addresses")["Accs"]) { }
 
-        public async Task<HttpResponseMessage> CheckIfUserExists(ExistsModel loginModel) => await PostJson("exists", loginModel);
+        public async Task<HttpResponseMessage> CheckIfUserExists(UserModel userModel) => await PostJson("exists", userModel);
 
         public async Task<HttpResponseMessage> Register(UserModel userModel) => await PostJson("register", userModel);
 
@@ -42,5 +42,7 @@ namespace Gateway.Services.Implementations
 
         public async Task<HttpResponseMessage> ChangeUserName(string username, string newUsername) => 
             await PutForm($"user/{username}", new Dictionary<string, string> { { "newUsername", newUsername } });
+
+        public async Task<HttpResponseMessage> Login(UserModel userModel) => await PostJson("login", userModel);
     }
 }

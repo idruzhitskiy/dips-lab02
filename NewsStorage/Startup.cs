@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Gateway.Services.Implementations;
 using Gateway.Services;
+using Gateway.CustomAuthorization;
 
 namespace NewsStorage
 {
@@ -31,12 +32,7 @@ namespace NewsStorage
             services.AddDbContext<ApplicationDbContext>(options =>
                 //options.UseSqlServer(Configuration.GetConnectionString("NewsConnection")));
                 options.UseInMemoryDatabase("News"));
-            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
-            {
-                builder.AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
-            }));
+            services.AddSingleton<TokensStore>();
             //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 
@@ -47,7 +43,7 @@ namespace NewsStorage
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseCors("MyPolicy");
+            app.UseMiddleware<CustomAuthorizationMiddleware>();
             app.UseMvc();
         }
     }

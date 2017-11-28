@@ -12,10 +12,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Gateway.Models;
 using Authentication.Entities;
 using Microsoft.Extensions.Logging;
-
+using Gateway.Extensions;
 namespace Authentication.Controllers
 {
-    [Route("api")]
+    [Route("")]
     public class AccountsController : Controller
     {
         private ApplicationDbContext db;
@@ -28,16 +28,36 @@ namespace Authentication.Controllers
         }
 
         [HttpPost("exists")]
-        public async Task<IActionResult> CheckIfUserExists([FromBody] ExistsModel existsModel)
+        public async Task<IActionResult> CheckIfUserExists([FromBody] UserModel userModel)
         {
-            logger.LogDebug($"Login request, username: {existsModel.Username}");
-            User user = db.Users.FirstOrDefault(u => u.Name == existsModel.Username);
+            User user = db.Users.FirstOrDefault(u => u.Name == userModel.Username);
             if (user != null)
             {
                 logger.LogDebug($"User {user.Name} found");
                 return Ok();
             }
-            logger.LogWarning($"User {existsModel.Username} not found");
+            logger.LogWarning($"User {userModel.Username} not found");
+            return Unauthorized();
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserModel userModel)
+        {
+            logger.LogDebug($"Login request, username: {userModel.Username}");
+            User user = db.Users.FirstOrDefault(u => u.Name == userModel.Username);
+            if (user != null)
+            {
+                if (user.Password == userModel.Password.Sha256())
+                {
+                    logger.LogDebug($"User {user.Name} found");
+                    return Ok();
+                }
+                else
+                {
+                    return StatusCode(500, "Wrong password");
+                }
+            }
+            logger.LogWarning($"User {userModel.Username} not found");
             return Unauthorized();
         }
 

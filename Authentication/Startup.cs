@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore.Storage;
+using Gateway.CustomAuthorization;
 
 namespace Authentication
 {
@@ -34,12 +35,7 @@ namespace Authentication
             services.AddDbContext<ApplicationDbContext>(options =>
                 //options.UseSqlServer(Configuration.GetConnectionString("AuthConnection")));
                 options.UseInMemoryDatabase("Authentication"));
-            services.AddCors(o => o.AddPolicy("MyPolicy", builder =>
-            {
-                builder.AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
-            }));
+            services.AddSingleton<TokensStore>();
 
             //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
@@ -51,6 +47,7 @@ namespace Authentication
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseMiddleware<CustomAuthorizationMiddleware>();
             app.UseCors("MyPolicy");
             app.UseMvc();
         }

@@ -1,4 +1,5 @@
 ﻿using Authentication.Entities;
+using Gateway.Extensions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -27,9 +28,9 @@ namespace Authentication
         {
             if (!Users.Any())
             {
-                Users.Add(new User { Name = "User1" });
-                Users.Add(new User { Name = "User2" });
-                Users.Add(new User { Name = "User3" });
+                Users.Add(new User { Name = "User1", Password = "pass1".Sha256() });
+                Users.Add(new User { Name = "User2", Password = "pass2".Sha256() });
+                Users.Add(new User { Name = "User3", Password = "pass3".Sha256() });
                 SaveChanges();
             }
         }

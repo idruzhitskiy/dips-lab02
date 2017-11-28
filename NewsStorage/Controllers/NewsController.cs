@@ -13,7 +13,7 @@ using Gateway.Pagination;
 
 namespace NewsStorage.Controllers
 {
-    [Route("api")]
+    [Route("")]
     public class NewsController : Controller
     {
         private ApplicationDbContext db;

@@ -22,6 +22,7 @@ using Gateway.Pagination;
 namespace Gateway.Controllers
 {
     [Route("api")]
+    [Authorize]
     public class GatewayController : Controller
     {
         private IAccountsService accountsService;
@@ -41,12 +42,11 @@ namespace Gateway.Controllers
         }
 
         [HttpGet("user/{username}")]
-        [Authorize]
         public async Task<ObjectResult> CheckIfUserExist(UserModel userModel)
         {
             bool hasScope = User.HasClaim("scope", "scope.readaccess");
 
-            var response = await accountsService.CheckIfUserExists(new ExistsModel { Username = userModel.Username });
+            var response = await accountsService.CheckIfUserExists(userModel);
             logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
             if (response?.IsSuccessStatusCode == true)
                 return Ok("");
@@ -178,7 +178,7 @@ namespace Gateway.Controllers
         public async Task<ObjectResult> GetNews(string name, int page = 0, int perpage = 0)
         {
             var message = string.Empty;
-            var userExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = name });
+            var userExists = await accountsService.CheckIfUserExists(new UserModel { Username = name });
             int maxPage = 0;
 
             if (userExists == null)
@@ -231,7 +231,7 @@ namespace Gateway.Controllers
                 string.IsNullOrWhiteSpace(news.Header))
                 return StatusCode(400, "News model not fulfilled");
 
-            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = news.Author });
+            var authorExists = await accountsService.CheckIfUserExists(new UserModel { Username = news.Author });
             logger.LogInformation($"Author response: {authorExists?.StatusCode}");
             if (authorExists == null)
                 return StatusCode(503, "Accounts service unavailable");
@@ -257,7 +257,7 @@ namespace Gateway.Controllers
         [HttpGet("{subscriber}/subscriptions")]
         public async Task<ObjectResult> GetSubscribedAuthors(string subscriber, int page = 0, int perpage = 0)
         {
-            var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
+            var subscriberExists = await accountsService.CheckIfUserExists(new UserModel { Username = subscriber });
 
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}");
 
@@ -283,8 +283,8 @@ namespace Gateway.Controllers
         [HttpPost("{subscriber}/subscriptions/{author}")]
         public async Task<ObjectResult> AddSubscription(string subscriber, string author)
         {
-            var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
-            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = author });
+            var subscriberExists = await accountsService.CheckIfUserExists(new UserModel { Username = subscriber });
+            var authorExists = await accountsService.CheckIfUserExists(new UserModel { Username = author });
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
 
             if (subscriberExists == null || authorExists == null)
@@ -313,8 +313,8 @@ namespace Gateway.Controllers
         [HttpDelete("{subscriber}/subscriptions/{author}")]
         public async Task<ObjectResult> RemoveSubscription(string subscriber, string author)
         {
-            var subscriberExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = subscriber });
-            var authorExists = await accountsService.CheckIfUserExists(new ExistsModel { Username = author });
+            var subscriberExists = await accountsService.CheckIfUserExists(new UserModel { Username = subscriber });
+            var authorExists = await accountsService.CheckIfUserExists(new UserModel { Username = author });
 
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
 
@@ -340,6 +340,18 @@ namespace Gateway.Controllers
                 logger.LogCritical("Subscriptions service unavailable");
                 return StatusCode(503, "Service unavailable");
             }
+        }
+
+        [HttpPost("auth/login")]
+        public async Task<ObjectResult> Login(UserModel userModel)
+        {
+            var result = await accountsService.Login(userModel);
+            if (result == null)
+                return StatusCode(503, "Accounts service unavailable");
+            else if (result.IsSuccessStatusCode)
+                return Ok("");
+            else
+                return StatusCode(500, result.Content.ReadAsStringAsync().Result);
         }
     }
 }

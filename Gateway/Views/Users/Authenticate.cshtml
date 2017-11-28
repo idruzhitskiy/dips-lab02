@@ -1,14 +1,17 @@
 ﻿@{
     ViewData["Title"] = "Authenticate";
 }
+@model Gateway.Models.Users.AuthenticationModel
 
 <div class="row">
     <div class="col-md-2">
         <form asp-controller="Users"
-              method="get">
+              method="post">
             <div class="form-group">
                 <label class="control-label">Username:</label>
-                <input name="username" class="form-control" type="text" required pattern="[a-zA-Z0-9]+" title="Input username (only letters and numbers allowed)"/>
+                <input asp-for="Username" class="form-control" type="text" required pattern="[a-zA-Z0-9]+" title="Input username (only letters and numbers allowed)"/>
+                <label class="control-label">Password:</label>
+                <input asp-for="Password" class="form-control" type="password" required title="Input password" />
             </div>
             <input type="submit" class="btn btn-primary" asp-action="Register" value="Register" />
             <input type="submit" class="btn btn-primary" asp-action="Login" value="Login" />
