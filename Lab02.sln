@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SubscriptionManager", "Subs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{41906948-D46A-4AF1-AC31-A504AF21677F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthServer", "AuthServer\AuthServer.csproj", "{394B4C83-14CD-4CFE-879B-67B526636994}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthServer", "AuthServer\AuthServer.csproj", "{394B4C83-14CD-4CFE-879B-67B526636994}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -17,9 +17,11 @@ namespace AuthServer
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             Configuration = configuration;
+            loggerFactory.AddConsole(LogLevel.Debug);
+
         }
 
         public IConfiguration Configuration { get; }
@@ -28,17 +30,15 @@ namespace AuthServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddLogging(lb => lb.AddConsole());
-            //services.AddDbContext<ApplicationDbContext>(options =>
-            //    options.UseInMemoryDatabase("Auth"));
-            //var dbContext = services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>();
+
             services.AddIdentityServer()
                 .AddDeveloperSigningCredential()
-                .AddInMemoryIdentityResources(Config.GetIdentityResources())
                 .AddInMemoryApiResources(Config.GetApiResources())
                 .AddInMemoryClients(Config.GetClients())
-                .AddTestUsers(Config.GetUsers());
+                .AddTestUsers(Config.GetUsers())
+                .AddProfileService<ProfileService>();
 
+            services.AddTransient<ProfileService>();
 
             services.AddCors(options =>
             {
@@ -49,14 +49,8 @@ namespace AuthServer
                     .AllowAnyHeader());
             });
 
-            //.AddInMemoryUsers(Users.Get());
-            //.AddResourceStore<ApplicationDbContext>()
-            //.AddClientStore<ApplicationDbContext>()
-            //.AddProfileService<ResourceOwnerPasswordValidatorAndProfileService>();
-
-            //Inject the classes we just created
-            //services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidatorAndProfileService>();
-            //services.AddTransient<IProfileService, ResourceOwnerPasswordValidatorAndProfileService>();
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseInMemoryDatabase("Auth"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

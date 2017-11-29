@@ -45,9 +45,9 @@ namespace Gateway
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(o =>
             {
-                o.Authority = "http://localhost:59257/";
+                o.Authority = "https://auth.loc";
                 o.RequireHttpsMetadata = false;
-                o.ApiName = "postman_api";
+                o.ApiName = "api";
             });
 
             services.AddCors(options =>

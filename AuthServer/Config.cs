@@ -16,52 +16,40 @@ namespace AuthServer
         // scopes define the resources in your system
         public static IEnumerable<IdentityResource> GetIdentityResources()
         {
-            return new List<IdentityResource>
-            {
-                new IdentityResources.OpenId(),
-                new IdentityResources.Profile(),
-            };
+            return new List<IdentityResource>();
         }
 
         public static IEnumerable<ApiResource> GetApiResources()
         {
             return new List<ApiResource>
             {
-                new ApiResource("api", "My API"),
-                new ApiResource("postman_api", "Postman Test Resource")
+                new ApiResource("api", "API")
             };
         }
 
         // clients want to access resources (aka scopes)
-        public static IEnumerable<Client> GetClients()
-        {
+        public static IEnumerable<Client> GetClients() =>
             // client credentials client
-            return new List<Client>
+            new List<Client>
             {
                 new Client
                 {
-                    ClientId = "client",
-                    ClientName = "Postman Test Client",
-                    AllowedGrantTypes = GrantTypes.Code,
+                    ClientId = "test-client",
+                    ClientName = "Test client",
+                    AllowedGrantTypes = GrantTypes.Code.Concat(GrantTypes.ResourceOwnerPassword).ToList(),
                     AllowAccessTokensViaBrowser = true,
+                    AllowOfflineAccess = true,
                     RequireConsent = false,
-                    RedirectUris =           { "https://gateway.loc/api/users/User1" },
-                    //NOTE: This link needs to match the link from the presentation layer - oidc-client
-                    //      otherwise IdentityServer won't display the link to go back to the site
-                    PostLogoutRedirectUris = { "https://www.getpostman.com" },
-                    AllowedCorsOrigins =     { "https://www.getpostman.com" },
+                    RedirectUris = { "https://gateway.loc/api" },
                     EnableLocalLogin = true,
                     AllowedScopes =
                     {
-                        IdentityServerConstants.StandardScopes.OpenId,
-                        IdentityServerConstants.StandardScopes.Profile,
-                        IdentityServerConstants.StandardScopes.Email,
+                        IdentityServerConstants.StandardScopes.OfflineAccess,
                         "api"
                     },
-                    ClientSecrets = new List<Secret>() { new Secret("secret".Sha256()) }
+                    ClientSecrets = new List<Secret>() { new Secret("test-secret".Sha256()) }
                 }
             };
-        }
 
         public static List<TestUser> GetUsers()
         {
@@ -70,25 +58,14 @@ namespace AuthServer
                 new TestUser
                 {
                     SubjectId = "1",
-                    Username = "alice",
-                    Password = "password",
-                    Claims = new List<Claim>
-                    {
-                        new Claim("name", "Alice"),
-                        new Claim("website", "https://alice.com")
-                    }
+                    Username = "User1",
+                    Password = "pass1"
                 },
                 new TestUser
                 {
                     SubjectId = "2",
-                    Username = "bob",
-                    Password = "password",
-
-                    Claims = new List<Claim>
-                    {
-                        new Claim("name", "Bob"),
-                        new Claim("website", "https://bob.com")
-                    }
+                    Username = "User2",
+                    Password = "pass2"
                 }
             };
         }
