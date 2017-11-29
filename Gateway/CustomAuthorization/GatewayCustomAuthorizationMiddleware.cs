@@ -12,6 +12,16 @@ namespace Gateway.CustomAuthorization
         {
         }
 
+        public override async Task Invoke(HttpContext context)
+        {
+            if (context.Request.Headers.Keys.Contains(AuthorizationWord))
+            {
+                await this._next(context);
+            }
+            else
+                await base.Invoke(context);
+        }
+
         public override List<string> GetAnonymousPaths() => new[] { "api", "auth", "login", "register" }.ToList();
 
         public override async Task ReturnForbidden(HttpContext context, string message)

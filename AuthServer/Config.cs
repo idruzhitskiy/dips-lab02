@@ -2,6 +2,7 @@
 using IdentityServer4;
 using IdentityServer4.Models;
 using IdentityServer4.Stores;
+using IdentityServer4.Test;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,77 +13,84 @@ namespace AuthServer
 {
     public class Config
     {
-    }
-    public class Clients
-    {
-        public static IEnumerable<Client> Get()
-        {
-            var secret = new Secret { Value = "mysecret".Sha512() };
-
-            return new List<Client> {
-            new Client {
-                ClientId = "authorizationCodeClient2",
-                ClientName = "Authorization Code Client",
-                ClientSecrets = new List<Secret> { secret },
-                Enabled = true,
-                AllowedGrantTypes = new List<string> { "authorization_code" }, //DELTA //IdentityServer3 wanted Flow = Flows.AuthorizationCode,
-                RequireConsent = true,
-                AllowRememberConsent = false,
-                RedirectUris =
-                  new List<string> {
-                       "http://gateway.loc"
-                  },
-                PostLogoutRedirectUris =
-                  new List<string> {"http://gateway.loc"},
-                AllowedScopes = new List<string> {
-                    "api"
-                },
-                AccessTokenType = AccessTokenType.Jwt
-            }
-        };
-        }
-    }
-    public static class Users
-    {
-        public static List<InMemoryUser> Get()
-        {
-            return new List<InMemoryUser> {
-            new InMemoryUser {
-                Subject = "1",
-                Username = "user",
-                Password = "pass123",
-                Claims = new List<Claim> {
-                    new Claim(ClaimTypes.GivenName, "GivenName"),
-                    new Claim(ClaimTypes.Surname, "surname"), //DELTA //.FamilyName in IdentityServer3
-                    new Claim(ClaimTypes.Email, "user@somesecurecompany.com"),
-                    new Claim(ClaimTypes.Role, "Badmin")
-                }
-            }
-        };
-        }
-    }
-
-    public class InMemoryUser
-    {
-        public string Subject { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public List<Claim> Claims { get; set; }
-    }
-
-    public class Scopes
-    {
         // scopes define the resources in your system
-        public static IEnumerable<Scope> Get()
+        public static IEnumerable<IdentityResource> GetIdentityResources()
         {
-            return new List<Scope> {
-            new Scope
+            return new List<IdentityResource>
             {
-                Name = "api",
-                DisplayName = "api scope",
-                Emphasize = false,
-            }
-        };
+                new IdentityResources.OpenId(),
+                new IdentityResources.Profile(),
+            };
+        }
+
+        public static IEnumerable<ApiResource> GetApiResources()
+        {
+            return new List<ApiResource>
+            {
+                new ApiResource("api", "My API"),
+                new ApiResource("postman_api", "Postman Test Resource")
+            };
+        }
+
+        // clients want to access resources (aka scopes)
+        public static IEnumerable<Client> GetClients()
+        {
+            // client credentials client
+            return new List<Client>
+            {
+                new Client
+                {
+                    ClientId = "client",
+                    ClientName = "Postman Test Client",
+                    AllowedGrantTypes = GrantTypes.Code,
+                    AllowAccessTokensViaBrowser = true,
+                    RequireConsent = false,
+                    RedirectUris =           { "https://gateway.loc/api/users/User1" },
+                    //NOTE: This link needs to match the link from the presentation layer - oidc-client
+                    //      otherwise IdentityServer won't display the link to go back to the site
+                    PostLogoutRedirectUris = { "https://www.getpostman.com" },
+                    AllowedCorsOrigins =     { "https://www.getpostman.com" },
+                    EnableLocalLogin = true,
+                    AllowedScopes =
+                    {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        IdentityServerConstants.StandardScopes.Email,
+                        "api"
+                    },
+                    ClientSecrets = new List<Secret>() { new Secret("secret".Sha256()) }
+                }
+            };
+        }
+
+        public static List<TestUser> GetUsers()
+        {
+            return new List<TestUser>
+            {
+                new TestUser
+                {
+                    SubjectId = "1",
+                    Username = "alice",
+                    Password = "password",
+                    Claims = new List<Claim>
+                    {
+                        new Claim("name", "Alice"),
+                        new Claim("website", "https://alice.com")
+                    }
+                },
+                new TestUser
+                {
+                    SubjectId = "2",
+                    Username = "bob",
+                    Password = "password",
+
+                    Claims = new List<Claim>
+                    {
+                        new Claim("name", "Bob"),
+                        new Claim("website", "https://bob.com")
+                    }
+                }
+            };
         }
     }
 }

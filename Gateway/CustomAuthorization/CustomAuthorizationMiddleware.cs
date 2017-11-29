@@ -13,7 +13,7 @@ namespace Gateway.CustomAuthorization
     {
         public static string AuthorizationWord = "Authorization";
         public static string UserWord = "User";
-        private readonly RequestDelegate _next;
+        protected readonly RequestDelegate _next;
         protected readonly TokensStore tokensStore;
 
         public CustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore)
@@ -24,12 +24,7 @@ namespace Gateway.CustomAuthorization
 
         public virtual async Task Invoke(HttpContext context)
         {
-            if (context.Request.Headers.Keys.Contains(AuthorizationWord))
-            {
-                var auth = context.Request.Headers[AuthorizationWord];
-                await CheckAuthorization(context, auth);
-            }
-            else if (context.Request.Cookies.Keys.Contains(AuthorizationWord))
+            if (context.Request.Cookies.Keys.Contains(AuthorizationWord))
             {
                 var auth = context.Request.Cookies[AuthorizationWord];
                 await CheckAuthorization(context, auth);
@@ -46,7 +41,7 @@ namespace Gateway.CustomAuthorization
         }
 
 
-        private async Task CheckAuthorization(HttpContext context, string auth)
+        protected async Task CheckAuthorization(HttpContext context, string auth)
         {
             var match = Regex.Match(auth, @"Bearer (\S+)");
             if (match.Groups.Count == 1)

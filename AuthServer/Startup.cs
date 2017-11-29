@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using IdentityServer4.Validation;
 using IdentityServer4.Services;
+using IdentityServer4.Models;
 
 namespace AuthServer
 {
@@ -28,18 +29,34 @@ namespace AuthServer
         {
             services.AddMvc();
             services.AddLogging(lb => lb.AddConsole());
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseInMemoryDatabase("Auth"));
-            var dbContext = services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>();
+            //services.AddDbContext<ApplicationDbContext>(options =>
+            //    options.UseInMemoryDatabase("Auth"));
+            //var dbContext = services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>();
             services.AddIdentityServer()
                 .AddDeveloperSigningCredential()
-                .AddResourceStore<ApplicationDbContext>()
-                .AddClientStore<ApplicationDbContext>()
-                .AddProfileService<ResourceOwnerPasswordValidatorAndProfileService>();
+                .AddInMemoryIdentityResources(Config.GetIdentityResources())
+                .AddInMemoryApiResources(Config.GetApiResources())
+                .AddInMemoryClients(Config.GetClients())
+                .AddTestUsers(Config.GetUsers());
+
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    builder => builder
+                    .AllowAnyMethod()
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader());
+            });
+
+            //.AddInMemoryUsers(Users.Get());
+            //.AddResourceStore<ApplicationDbContext>()
+            //.AddClientStore<ApplicationDbContext>()
+            //.AddProfileService<ResourceOwnerPasswordValidatorAndProfileService>();
 
             //Inject the classes we just created
-            services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidatorAndProfileService>();
-            services.AddTransient<IProfileService, ResourceOwnerPasswordValidatorAndProfileService>();
+            //services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidatorAndProfileService>();
+            //services.AddTransient<IProfileService, ResourceOwnerPasswordValidatorAndProfileService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,7 +66,7 @@ namespace AuthServer
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseCors("AllowAll");
             app.UseIdentityServer();
             app.UseMvc();
         }

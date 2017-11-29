@@ -44,8 +44,6 @@ namespace Gateway.Controllers
         [HttpGet("user/{username}")]
         public async Task<ObjectResult> CheckIfUserExist(UserModel userModel)
         {
-            bool hasScope = User.HasClaim("scope", "scope.readaccess");
-
             var response = await accountsService.CheckIfUserExists(userModel);
             logger.LogInformation($"Response from accounts service: {response?.StatusCode}");
             if (response?.IsSuccessStatusCode == true)

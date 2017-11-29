@@ -25,7 +25,13 @@ namespace Gateway.CustomAuthorization
                 await context.Response.WriteAsync(tokensStore.GetToken(Guid.NewGuid().ToString(), TimeSpan.FromSeconds(5)));
                 return;
             }
-            await base.Invoke(context);
+            else if (context.Request.Headers.Keys.Contains(AuthorizationWord))
+            {
+                var auth = context.Request.Headers[AuthorizationWord];
+                await CheckAuthorization(context, auth);
+            }
+            else
+                await base.Invoke(context);
         }
 
         public override List<string> GetAnonymousPaths()

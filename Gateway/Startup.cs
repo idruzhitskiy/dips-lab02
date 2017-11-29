@@ -45,9 +45,18 @@ namespace Gateway
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(o =>
             {
-                o.Authority = "http://localhost:59257";
+                o.Authority = "http://localhost:59257/";
                 o.RequireHttpsMetadata = false;
-                o.ApiName = "scope.allowall";
+                o.ApiName = "postman_api";
+            });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    builder => builder
+                    .AllowAnyMethod()
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader());
             });
             services.AddMvc();
 
@@ -60,6 +69,7 @@ namespace Gateway
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors("AllowAll");
             app.UseMiddleware<GatewayCustomAuthorizationMiddleware>();
             app.UseAuthentication();
             app.UseStaticFiles();
