@@ -13,6 +13,8 @@ namespace AuthServer
 {
     public class Config
     {
+        private const int Expiration = 600;
+
         // scopes define the resources in your system
         public static IEnumerable<IdentityResource> GetIdentityResources()
         {
@@ -42,6 +44,9 @@ namespace AuthServer
                     RequireConsent = false,
                     RedirectUris = { "https://gateway.loc/api" },
                     EnableLocalLogin = true,
+                    AccessTokenLifetime = Expiration,
+                    IdentityTokenLifetime = Expiration,
+                    AuthorizationCodeLifetime = Expiration,
                     AllowedScopes =
                     {
                         IdentityServerConstants.StandardScopes.OfflineAccess,

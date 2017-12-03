@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Gateway.Services.Implementations;
 using Gateway.Services;
 using Gateway.CustomAuthorization;
+using Gateway;
 
 namespace NewsStorage
 {

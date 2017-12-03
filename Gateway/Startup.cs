@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using IdentityServer4.AccessTokenValidation;
 using Gateway.CustomAuthorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Gateway
 {
@@ -39,8 +40,8 @@ namespace Gateway
             services.AddTransient<ISubscriptionsService, SubscriptionsService>();
             services.AddTransient<INewsService, NewsService>();
             services.AddTransient<GatewayController>();
-            services.AddSingleton<TokensStore>();
 
+            services.AddSingleton<TokensStore>();
             services.AddLogging(lb => lb.AddConsole());
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(o =>
@@ -48,6 +49,7 @@ namespace Gateway
                 o.Authority = "https://auth.loc";
                 o.RequireHttpsMetadata = false;
                 o.ApiName = "api";
+                o.JwtValidationClockSkew = TimeSpan.FromSeconds(0);
             });
 
             services.AddCors(options =>

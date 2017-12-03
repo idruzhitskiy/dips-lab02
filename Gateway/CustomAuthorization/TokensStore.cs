@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Gateway.CustomAuthorization
@@ -8,39 +9,68 @@ namespace Gateway.CustomAuthorization
     public class TokensStore
     {
         // Token: Name, Expiry, Last access time
-        Dictionary<string, (string, DateTime, DateTime)> tokens = new Dictionary<string, (string, DateTime, DateTime)>();
+        //Dictionary<string, (string, DateTime, DateTime)> tokens = new Dictionary<string, (string, DateTime, DateTime)>();
+        IEnumerable<TokenInfo> tokens = new List<TokenInfo>();
+        private object lck = new object();
+        public TokensStore()
+        {
+            Task.Run(() =>
+            {
+                lock (lck)
+                {
+                    foreach (var token in tokens)
+                        CheckToken(token.Token);
+                }
+                Thread.Sleep(60000);
+            });
+        }
 
         public CheckTokenResult CheckToken(string token)
         {
-            if (!tokens.Keys.Contains(token))
-                return CheckTokenResult.NotValid;
-            if (tokens[token].Item2 > DateTime.Now)
+            lock (lck)
             {
-                if (DateTime.Now - tokens[token].Item3 < TimeSpan.FromMinutes(30))
+                var currentToken = tokens.FirstOrDefault(t => t.Token == token);
+                if (currentToken == null)
+                    return CheckTokenResult.NotValid;
+                if (currentToken.Expiry > DateTime.Now)
                 {
-                    var prev = tokens[token];
-                    tokens.Remove(token);
-                    tokens.Add(token, (prev.Item1, prev.Item2, DateTime.Now));
-                    return CheckTokenResult.Valid;
+                    if (DateTime.Now - currentToken.LastAccessDate < TimeSpan.FromMinutes(30))
+                    {
+                        currentToken.LastAccessDate = DateTime.Now;
+                        return CheckTokenResult.Valid;
+                    }
                 }
+                tokens = tokens.Where(t => t.Token != token);
+                return CheckTokenResult.Expired;
             }
-            tokens.Remove(token);
-            return CheckTokenResult.Expired;
         }
 
         public string GetToken(string owner, TimeSpan expiration)
         {
-            var token = Guid.NewGuid().ToString();
-            var expiry = DateTime.Now + expiration;
-            tokens.Add(token, (owner, expiry, DateTime.Now));
-            return token;
+            lock (lck)
+            {
+                var token = Guid.NewGuid().ToString();
+                var expiry = DateTime.Now + expiration;
+                tokens = tokens.Concat(new[]{
+                    new TokenInfo
+                    {
+                        Token = token,
+                        Expiry = expiry,
+                        LastAccessDate = DateTime.Now,
+                        User = owner
+                    } });
+                return token;
+            }
         }
 
         public string GetNameByToken(string token)
         {
-            if (tokens.Keys.Contains(token))
-                return tokens[token].Item1;
-            return null;
+            lock (lck)
+            {
+                if (tokens.Any(t => t.Token == token))
+                    return tokens.First(t => t.Token == token).User;
+                return null;
+            }
         }
     }
 
@@ -49,5 +79,14 @@ namespace Gateway.CustomAuthorization
         Valid,
         NotValid,
         Expired
+    }
+
+    public class TokenInfo
+    {
+        public int Id { get; set; }
+        public string Token { get; set; }
+        public string User { get; set; }
+        public DateTime Expiry { get; set; }
+        public DateTime LastAccessDate { get; set; }
     }
 }

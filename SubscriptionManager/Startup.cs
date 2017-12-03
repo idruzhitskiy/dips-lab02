@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Gateway.CustomAuthorization;
+using Gateway;
 
 namespace SubscriptionManager
 {

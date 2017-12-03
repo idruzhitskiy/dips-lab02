@@ -31,11 +31,17 @@ namespace AuthServer.Controllers
             this.dbContext = dbContext;
         }
 
-        [HttpGet]
-        [Route("login")]
+        //[HttpGet]
+        //[Route("login")]
+        //public async Task<IActionResult> Login(string returnUrl)
+        //{
+        //    return View(new LoginModel { ReturnUrl = returnUrl });
+        //}
+
+        [HttpGet("login")]
         public async Task<IActionResult> Login(string returnUrl)
         {
-            return View(new LoginModel { ReturnUrl = returnUrl });
+            return await Login(new LoginModel { Username = "User1", Password = "pass1", ReturnUrl = returnUrl });
         }
 
         [HttpPost]
