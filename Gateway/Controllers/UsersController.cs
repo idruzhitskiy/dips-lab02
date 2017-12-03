@@ -23,10 +23,12 @@ namespace Gateway.Controllers
         }
         public async Task<IActionResult> Index(IndexModel indexModel)
         {
-            if (Request.Headers.Keys.Contains(CustomAuthorizationMiddleware.UserWord))
-                indexModel.Username = string.Join(string.Empty, Request.Headers[CustomAuthorizationMiddleware.UserWord]);
+            if (User.Identities.Any(i => i.IsAuthenticated))
+                indexModel.Username = User.Identities.First(i => i.IsAuthenticated).Name;
             if (!string.IsNullOrWhiteSpace(indexModel.Username))
+            {
                 return View(indexModel);
+            }
             else
                 return RedirectToAction(nameof(Authenticate));
         }
@@ -65,7 +67,7 @@ namespace Gateway.Controllers
                 return View("Error", new ErrorModel(result));
             else
             {
-                var token = tokenStore.GetToken(authenticationModel.Username, TimeSpan.FromMinutes(10));
+                var token = tokenStore.GetToken(authenticationModel.Username, result.Value.ToString(), TimeSpan.FromMinutes(10));
                 Response.Cookies.Append(CustomAuthorizationMiddleware.AuthorizationWord, $"Bearer {token}");
                 if (authenticationModel.Redirect != null)
                     return Redirect(authenticationModel.Redirect);

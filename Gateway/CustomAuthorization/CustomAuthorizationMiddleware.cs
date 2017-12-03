@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using IdentityModel;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -12,7 +15,8 @@ namespace Gateway.CustomAuthorization
     public abstract class CustomAuthorizationMiddleware
     {
         public static string AuthorizationWord = "Authorization";
-        public static string UserWord = "User";
+        public static string UserWord = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name";
+        public static string RoleWord = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
         protected readonly RequestDelegate _next;
         protected readonly TokensStore tokensStore;
 
@@ -54,7 +58,12 @@ namespace Gateway.CustomAuthorization
                 var result = tokensStore.CheckToken(token);
                 if (result == CheckTokenResult.Valid)
                 {
-                    context.Request.Headers.Add(UserWord, tokensStore.GetNameByToken(token));
+                    ClaimsIdentity identity = new ClaimsIdentity(new List<Claim>
+                    {
+                        new Claim(UserWord, tokensStore.GetNameByToken(token)),
+                        new Claim(RoleWord, tokensStore.GetRoleByToken(token))
+                    }, "CustomAuthenticationType");
+                    context.User.AddIdentity(identity);
                     await this._next(context);
                 }
                 else if (result == CheckTokenResult.Expired)

@@ -28,9 +28,9 @@ namespace Authentication
         {
             if (!Users.Any())
             {
-                Users.Add(new User { Name = "User1", Password = "pass1".Sha256() });
-                Users.Add(new User { Name = "User2", Password = "pass2".Sha256() });
-                Users.Add(new User { Name = "User3", Password = "pass3".Sha256() });
+                Users.Add(new User { Name = "User1", Password = "pass1".Sha256(), Role = "User" });
+                Users.Add(new User { Name = "User2", Password = "pass2".Sha256(), Role = "User" });
+                Users.Add(new User { Name = "User3", Password = "pass3".Sha256(), Role = "Admin" });
                 SaveChanges();
             }
         }

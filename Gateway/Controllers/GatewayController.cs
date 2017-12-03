@@ -344,12 +344,21 @@ namespace Gateway.Controllers
         public async Task<ObjectResult> Login(UserModel userModel)
         {
             var result = await accountsService.Login(userModel);
+            ObjectResult res = new ObjectResult("");
             if (result == null)
-                return StatusCode(503, "Accounts service unavailable");
-            else if (result.IsSuccessStatusCode)
-                return Ok("");
+                res = StatusCode(503, "Accounts service unavailable");
+            if (result.IsSuccessStatusCode)
+            {
+                result = await accountsService.GetUserRole(userModel.Username);
+                if (result.IsSuccessStatusCode)
+                    res = Ok(await result.Content.ReadAsStringAsync());
+                else
+                    res = StatusCode(500, "Error retrieving user role: " + result.Content.ReadAsStringAsync().Result);
+            }
             else
-                return StatusCode(500, result.Content.ReadAsStringAsync().Result);
+                res = StatusCode(500, "Error retrieving user: " + result.Content.ReadAsStringAsync().Result);
+
+            return res;
         }
     }
 }

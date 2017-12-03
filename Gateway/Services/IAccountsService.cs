@@ -14,5 +14,6 @@ namespace Gateway.Services
         Task<HttpResponseMessage> Register(UserModel userModel);
         Task<UserModel> DeleteUser(string username);
         Task<HttpResponseMessage> ChangeUserName(string username, string newUsername);
+        Task<HttpResponseMessage> GetUserRole(string username);
     }
 }

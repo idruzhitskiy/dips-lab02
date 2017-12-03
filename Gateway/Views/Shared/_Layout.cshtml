@@ -26,9 +26,13 @@
                     <li><a asp-controller="Subscriptions" asp-action="Index">Manage subscriptions</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    @if (GetCurrentName() != null)
+                    @if (User.Identities.Any(i => i.IsAuthenticated))
                     {
-                        <li class="navbar-text">Logged in as @GetCurrentName()</li>
+                        <li class="navbar-text">Logged in as @User.Identities.First(i => i.IsAuthenticated).Name</li>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="navbar-text text-capitalize text-danger">admin</li>
+                        }
                         <li><a asp-controller="Users" asp-action="Index">Control panel</a></li>
                         <li><a asp-controller="Users" asp-action="Logout">Logout</a></li>
                     }

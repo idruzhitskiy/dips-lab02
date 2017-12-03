@@ -45,7 +45,7 @@ namespace Gateway.CustomAuthorization
             }
         }
 
-        public string GetToken(string owner, TimeSpan expiration)
+        public string GetToken(string owner, string role, TimeSpan expiration)
         {
             lock (lck)
             {
@@ -57,8 +57,10 @@ namespace Gateway.CustomAuthorization
                         Token = token,
                         Expiry = expiry,
                         LastAccessDate = DateTime.Now,
-                        User = owner
-                    } });
+                        Username = owner,
+                        Role = role
+                    }
+                });
                 return token;
             }
         }
@@ -68,7 +70,17 @@ namespace Gateway.CustomAuthorization
             lock (lck)
             {
                 if (tokens.Any(t => t.Token == token))
-                    return tokens.First(t => t.Token == token).User;
+                    return tokens.First(t => t.Token == token).Username;
+                return null;
+            }
+        }
+
+        public string GetRoleByToken(string token)
+        {
+            lock (lck)
+            {
+                if (tokens.Any(t => t.Token == token))
+                    return tokens.First(t => t.Token == token).Role;
                 return null;
             }
         }
@@ -85,7 +97,8 @@ namespace Gateway.CustomAuthorization
     {
         public int Id { get; set; }
         public string Token { get; set; }
-        public string User { get; set; }
+        public string Username { get; set; }
+        public string Role { get; set; }
         public DateTime Expiry { get; set; }
         public DateTime LastAccessDate { get; set; }
     }

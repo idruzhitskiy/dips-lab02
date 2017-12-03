@@ -44,5 +44,7 @@ namespace Gateway.Services.Implementations
             await PutForm($"user/{username}", new Dictionary<string, string> { { "newUsername", newUsername } });
 
         public async Task<HttpResponseMessage> Login(UserModel userModel) => await PostJson("login", userModel);
+
+        public async Task<HttpResponseMessage> GetUserRole(string username) => await Get($"user/{username}");
     }
 }

@@ -46,7 +46,7 @@ namespace Gateway
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(o =>
             {
-                o.Authority = "https://auth.loc";
+                o.Authority = "http://localhost:58491";
                 o.RequireHttpsMetadata = false;
                 o.ApiName = "api";
                 o.JwtValidationClockSkew = TimeSpan.FromSeconds(0);

@@ -11,6 +11,7 @@ namespace Gateway.CustomAuthorization
 {
     public class ServiceCustomAuthorizationMiddleware : CustomAuthorizationMiddleware
     {
+        private const string serviceWord = "Service";
         private List<(string, string)> allowedApps = new List<(string, string)> { ("AppId", "AppSecret") };
 
         public ServiceCustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore) : base(next, tokensStore)
@@ -22,7 +23,7 @@ namespace Gateway.CustomAuthorization
             if (RequestedToken(context))
             {
                 context.Response.StatusCode = 200;
-                await context.Response.WriteAsync(tokensStore.GetToken(Guid.NewGuid().ToString(), TimeSpan.FromSeconds(5)));
+                await context.Response.WriteAsync(tokensStore.GetToken(Guid.NewGuid().ToString(), serviceWord, TimeSpan.FromSeconds(5)));
                 return;
             }
             else if (context.Request.Headers.Keys.Contains(AuthorizationWord))

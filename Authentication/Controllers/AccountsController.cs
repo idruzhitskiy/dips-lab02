@@ -127,5 +127,17 @@ namespace Authentication.Controllers
                 return Ok();
             return StatusCode(500, message);
         }
+
+        [HttpGet("user/{username}")]
+        public async Task<IActionResult> GetUserRole(string username)
+        {
+            User user = db.Users.FirstOrDefault(u => u.Name == username);
+            if (user != null)
+            {
+                return StatusCode(200, user.Role);
+            }
+            return StatusCode(500, "User not found");
+        }
+            
     }
 }
