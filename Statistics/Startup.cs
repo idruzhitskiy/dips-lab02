@@ -12,6 +12,7 @@ using Statistics.EventBus;
 using Statistics.RabbitMQHelpers;
 using Statistics.Events;
 using Statistics.EventHandlers;
+using Microsoft.EntityFrameworkCore;
 
 namespace Statistics
 {
@@ -27,12 +28,15 @@ namespace Statistics
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            DbContextOptions options = null;
+            services.AddDbContext<ApplicationDbContext>(ops => ops.UseInMemoryDatabase("Statistics"));
             services.AddSingleton<IRabbitMQPersistentConnection, RabbitMQPersistentConnection>();
             services.AddSingleton<IEventBus, RabbitMQEventBus>();
             services.AddSingleton<IEventHandler, AddNewsEventHandler>();
             services.AddSingleton<IEventHandler, AddUserEventHandler>();
             services.AddSingleton<IEventHandler, LoginEventHandler>();
             services.AddSingleton<IEventHandler, RequestEventHandler>();
+            services.AddTransient<DbProxy>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

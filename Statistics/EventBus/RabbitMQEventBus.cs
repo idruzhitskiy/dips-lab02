@@ -30,6 +30,7 @@ namespace Statistics.EventBus
         private ILogger<RabbitMQEventBus> logger;
         private int retryCount = 2;
         private RetryPolicy policy;
+        private List<string> alreadyProcessedIds = new List<string>();
 
         public RabbitMQEventBus(IConfiguration configuration, ILogger<RabbitMQEventBus> logger)
         {
@@ -123,9 +124,10 @@ namespace Statistics.EventBus
             {
                 var channel = connection.CreateModel();
                 channel.ExchangeDeclare(exchange: exchangeName, type: "direct");
-                channel.QueueDeclare(queue: queueName, exclusive: true);
+                queueName = channel.QueueDeclare().QueueName;
+
                 var consumer = new EventingBasicConsumer(channel);
-                consumer.ConsumerCancelled += async (sender, args) =>
+                consumer.ConsumerCancelled += (sender, args) =>
                 {
                     consumerChannel.Dispose();
                     consumerChannel = CreateConsumerChannel();
@@ -137,12 +139,13 @@ namespace Statistics.EventBus
                     await ProcessEvent(eventName, message);
                     channel.BasicAck(ea.DeliveryTag, false);
                 };
-                channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
                 channel.CallbackException += (sender, ea) =>
                 {
                     consumerChannel.Dispose();
                     consumerChannel = CreateConsumerChannel();
                 };
+
+                channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
                 return channel;
             });
         }
@@ -158,8 +161,13 @@ namespace Statistics.EventBus
                 {
                     try
                     {
-                        var genericType = template.MakeGenericType(type);
-                        await (Task)genericType.GetMethod("Handle").Invoke(handler, new object[] { @event });
+                        string id = (@event as Event).Id;
+                        if (!alreadyProcessedIds.Contains(id))
+                        {
+                            var genericType = template.MakeGenericType(type);
+                            await (Task)genericType.GetMethod("Handle").Invoke(handler, new object[] { @event });
+                            alreadyProcessedIds.Add(id);
+                        }
                     }
                     catch (Exception e)
                     {

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Statistics.EventBus;
 using Statistics.Events;
 using System;
@@ -12,8 +13,10 @@ namespace Statistics.EventHandlers
     {
         private ILogger<AddUserEventHandler> logger;
 
-        public AddUserEventHandler(IEventBus eventBus, ILogger<AddUserEventHandler> logger)
-            : base(eventBus)
+        public AddUserEventHandler(IEventBus eventBus,
+            DbProxy proxy,
+            ILogger<AddUserEventHandler> logger)
+            : base(eventBus, proxy)
         {
             this.logger = logger;
         }
