@@ -17,11 +17,11 @@ namespace Authentication
         public DbSet<User> Users { get; set; }
         public ApplicationDbContext() : base()
         {
-            Initialize();
+            //Initialize();
         }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> ops) : base(ops)
         {
-            Initialize();
+            //Initialize();
         }
 
         private void Initialize()

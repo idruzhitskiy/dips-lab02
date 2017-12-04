@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Gateway.CustomAuthorization;
 using Gateway;
+using Statistics.EventBus;
 
 namespace SubscriptionManager
 {
@@ -32,6 +33,7 @@ namespace SubscriptionManager
                //options.UseSqlServer(Configuration.GetConnectionString("SubsConnection")));
                options.UseInMemoryDatabase("Subscription"));
             services.AddSingleton<TokensStore>();
+            services.AddSingleton<IEventBus, RabbitMQEventBus>();
 
             //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }

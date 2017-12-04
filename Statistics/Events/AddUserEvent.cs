@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Gateway.Models
+namespace Statistics.Events
 {
-    public class UserModel
+    public class AddUserEvent : Event
     {
         public string Username { get; set; }
-        public string Password { get; set; }
         public string Role { get; set; }
     }
 }

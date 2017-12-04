@@ -18,6 +18,8 @@ using Gateway.Services.Implementations;
 using Gateway.Scheduling;
 using System.Text.RegularExpressions;
 using Gateway.Pagination;
+using Statistics.EventBus;
+using Statistics.Events;
 
 namespace Gateway.Controllers
 {
@@ -28,17 +30,20 @@ namespace Gateway.Controllers
         private IAccountsService accountsService;
         private ISubscriptionsService subscriptionsService;
         private INewsService newsService;
+        private IEventBus eventBus;
         private ILogger<GatewayController> logger;
 
         public GatewayController(ILogger<GatewayController> logger,
             IAccountsService accountsService,
             ISubscriptionsService subscriptionsService,
-            INewsService newsService)
+            INewsService newsService,
+            IEventBus eventBus)
         {
             this.logger = logger;
             this.accountsService = accountsService;
             this.subscriptionsService = subscriptionsService;
             this.newsService = newsService;
+            this.eventBus = eventBus;
         }
 
         [HttpGet("user/{username}")]
@@ -62,6 +67,11 @@ namespace Gateway.Controllers
 
             if (response?.StatusCode == System.Net.HttpStatusCode.OK)
             {
+                eventBus.Publish(new AddUserEvent
+                {
+                    Username = userModel.Username,
+                    Role = userModel.Role
+                });
                 return StatusCode(200, "");
             }
             else if (response != null)
@@ -77,7 +87,6 @@ namespace Gateway.Controllers
             }
         }
 
-        // Модифицирует несколько сервисов
         [HttpDelete("user/{username}")]
         public async Task<ObjectResult> DeleteUser(string username)
         {
@@ -109,7 +118,6 @@ namespace Gateway.Controllers
             return Ok("");
         }
 
-        // Модифицирует несколько сервисов
         [HttpPost("user/{username}")]
         public async Task<ObjectResult> ChangeUserName(string username, string newUsername)
         {
@@ -171,7 +179,6 @@ namespace Gateway.Controllers
             return StatusCode(500, message);
         }
 
-        // Запрашивает информацию с нескольких сервисов
         [HttpGet("{name}/news")]
         public async Task<ObjectResult> GetNews(string name, int page = 0, int perpage = 0)
         {
@@ -241,7 +248,13 @@ namespace Gateway.Controllers
             {
                 logger.LogInformation($"Attempt to add news, response {response.StatusCode}");
                 if (response.IsSuccessStatusCode)
+                {
+                    eventBus.Publish(new AddNewsEvent
+                    {
+                        Author = news.Author
+                    });
                     return Ok("");
+                }
                 else
                     return StatusCode(500, response.Content?.ReadAsStringAsync()?.Result);
             }
@@ -279,10 +292,10 @@ namespace Gateway.Controllers
         }
 
         [HttpPost("{subscriber}/subscriptions/{author}")]
-        public async Task<ObjectResult> AddSubscription(string subscriber, string author)
+        public async Task<ObjectResult> AddSubscription(AddSubscriptionModel addSubscriptionModel)
         {
-            var subscriberExists = await accountsService.CheckIfUserExists(new UserModel { Username = subscriber });
-            var authorExists = await accountsService.CheckIfUserExists(new UserModel { Username = author });
+            var subscriberExists = await accountsService.CheckIfUserExists(new UserModel { Username = addSubscriptionModel.Subscriber });
+            var authorExists = await accountsService.CheckIfUserExists(new UserModel { Username = addSubscriptionModel.Author });
             logger.LogInformation($"Subscriber response: {subscriberExists?.StatusCode}, author response: {authorExists?.StatusCode}");
 
             if (subscriberExists == null || authorExists == null)
@@ -292,10 +305,10 @@ namespace Gateway.Controllers
             if (authorExists.StatusCode != System.Net.HttpStatusCode.OK)
                 return StatusCode(500, "Author doesn't exists");
 
-            var response = await subscriptionsService.AddSubscription(subscriber, author);
+            var response = await subscriptionsService.AddSubscription(addSubscriptionModel.Subscriber, addSubscriptionModel.Author);
             if (response != null)
             {
-                logger.LogInformation($"Attempt to add subscription {subscriber}-{author}, response {response.StatusCode}");
+                logger.LogInformation($"Attempt to add subscription {addSubscriptionModel.Subscriber}-{addSubscriptionModel.Author}, response {response.StatusCode}");
                 if (response.IsSuccessStatusCode)
                     return Ok("");
                 else
@@ -351,7 +364,14 @@ namespace Gateway.Controllers
             {
                 result = await accountsService.GetUserRole(userModel.Username);
                 if (result.IsSuccessStatusCode)
+                {
+                    eventBus.Publish(new LoginEvent
+                    {
+                        Name = userModel.Username,
+                        Origin = Request.Host.ToString() ?? "unknown"
+                    });
                     res = Ok(await result.Content.ReadAsStringAsync());
+                }
                 else
                     res = StatusCode(500, "Error retrieving user role: " + result.Content.ReadAsStringAsync().Result);
             }

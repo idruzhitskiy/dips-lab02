@@ -12,7 +12,7 @@ namespace SubscriptionManager
         public DbSet<Subscription> Subscriptions { get; set; }
         public ApplicationDbContext() : base()
         {
-            Initialize();
+            //Initialize();
         }
 
         private void Initialize()
@@ -28,7 +28,7 @@ namespace SubscriptionManager
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> ops) : base(ops)
         {
-            Initialize();
+            //Initialize();
         }
     }
 }

@@ -8,17 +8,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.EntityFrameworkCore.Storage;
-using Gateway.CustomAuthorization;
-using Gateway;
 using Statistics.EventBus;
+using Statistics.RabbitMQHelpers;
+using Statistics.Events;
+using Statistics.EventHandlers;
 
-namespace Authentication
+namespace Statistics
 {
     public class Startup
     {
@@ -32,14 +27,12 @@ namespace Authentication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
-
-            services.AddDbContext<ApplicationDbContext>(options =>
-                //options.UseSqlServer(Configuration.GetConnectionString("AuthConnection")));
-                options.UseInMemoryDatabase("Authentication"));
-            services.AddSingleton<TokensStore>();
+            services.AddSingleton<IRabbitMQPersistentConnection, RabbitMQPersistentConnection>();
             services.AddSingleton<IEventBus, RabbitMQEventBus>();
-            //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
+            services.AddSingleton<IEventHandler, AddNewsEventHandler>();
+            services.AddSingleton<IEventHandler, AddUserEventHandler>();
+            services.AddSingleton<IEventHandler, LoginEventHandler>();
+            services.AddSingleton<IEventHandler, RequestEventHandler>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,9 +42,7 @@ namespace Authentication
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseMiddleware<ServiceCustomAuthorizationMiddleware>();
-            app.UseCors("MyPolicy");
-            app.UseMvc();
+            app.ApplicationServices.GetServices<IEventHandler>();
         }
     }
 }

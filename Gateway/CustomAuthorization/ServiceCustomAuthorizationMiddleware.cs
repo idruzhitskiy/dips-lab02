@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Text;
+using Statistics.EventBus;
+using Statistics.Events;
 
 namespace Gateway.CustomAuthorization
 {
@@ -14,16 +16,24 @@ namespace Gateway.CustomAuthorization
         private const string serviceWord = "Service";
         private List<(string, string)> allowedApps = new List<(string, string)> { ("AppId", "AppSecret") };
 
-        public ServiceCustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore) : base(next, tokensStore)
+        public ServiceCustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore, IEventBus eventBus) : base(next, tokensStore, eventBus)
         {
         }
 
         public override async Task Invoke(HttpContext context)
         {
+            eventBus.Publish(new RequestEvent
+            {
+                Host = context.Connection.LocalIpAddress.ToString() + ":" + context.Connection.LocalPort.ToString(),
+                Origin = context.Connection.RemoteIpAddress.ToString() + ":" + context.Connection.RemotePort.ToString(),
+                Route = context.Request.Path.ToString(),
+                Type = "Service",
+                OccurenceTime = DateTime.Now
+            });
             if (RequestedToken(context))
             {
                 context.Response.StatusCode = 200;
-                await context.Response.WriteAsync(tokensStore.GetToken(Guid.NewGuid().ToString(), serviceWord, TimeSpan.FromSeconds(5)));
+                await context.Response.WriteAsync(tokensStore.GetToken(Guid.NewGuid().ToString(), serviceWord, TimeSpan.FromMinutes(5)));
                 return;
             }
             else if (context.Request.Headers.Keys.Contains(AuthorizationWord))

@@ -19,6 +19,7 @@ namespace Gateway.Controllers
         public UsersController(GatewayController gatewayController, TokensStore tokenStore)
         {
             this.gatewayController = gatewayController;
+            this.gatewayController.ControllerContext = ControllerContext;
             this.tokenStore = tokenStore;
         }
         public async Task<IActionResult> Index(IndexModel indexModel)
@@ -62,6 +63,7 @@ namespace Gateway.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(AuthenticationModel authenticationModel)
         {
+            gatewayController.ControllerContext = ControllerContext;
             var result = await gatewayController.Login(new Models.UserModel { Username = authenticationModel.Username, Password = authenticationModel.Password });
             if (result.StatusCode != 200)
                 return View("Error", new ErrorModel(result));

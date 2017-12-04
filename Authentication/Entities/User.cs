@@ -17,6 +17,7 @@ namespace Authentication.Entities
         {
             this.Name = model.Username;
             this.Password = model.Password.Sha256();
+            this.Role = string.IsNullOrWhiteSpace(model.Role) ? "User" : model.Role;
         }
         public int Id { get; set; }
         public string Name { get; set; }

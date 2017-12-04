@@ -12,7 +12,7 @@ namespace NewsStorage
         public DbSet<News> News { get; set; }
         public ApplicationDbContext() : base()
         {
-            Initialize();
+            //Initialize();
         }
 
         private void Initialize()
@@ -30,7 +30,7 @@ namespace NewsStorage
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> ops) : base(ops)
         {
-            Initialize();
+            //Initialize();
         }
     }
 }

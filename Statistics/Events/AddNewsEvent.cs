@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Gateway.Models
+namespace Statistics.Events
 {
-    public class AddSubscriptionModel
+    public class AddNewsEvent : Event
     {
         public string Author { get; set; }
-        public string Subscriber { get; set; }
     }
 }

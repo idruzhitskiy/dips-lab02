@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Gateway.Models
+namespace Statistics.Entities
 {
-    public class AddSubscriptionModel
+    public class NewsInfo
     {
         public string Author { get; set; }
-        public string Subscriber { get; set; }
+        public DateTime AddedTime { get; set; }
     }
 }

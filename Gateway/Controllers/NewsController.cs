@@ -23,8 +23,8 @@ namespace Gateway.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(IndexModel indexModel)
         {
-            if (Request.Headers.Keys.Contains(CustomAuthorizationMiddleware.UserWord))
-                indexModel.Username = string.Join(string.Empty, Request.Headers[CustomAuthorizationMiddleware.UserWord]);
+            if (User.Identities.Any(i => i.IsAuthenticated))
+                indexModel.Username = User.Identities.First(i => i.IsAuthenticated).Name;
             if (!string.IsNullOrWhiteSpace(indexModel.Username))
             {
                 var news = await gatewayController.GetNews(indexModel.Username, indexModel.Page, indexModel.Size);

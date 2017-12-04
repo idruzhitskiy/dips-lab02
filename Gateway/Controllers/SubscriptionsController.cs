@@ -25,8 +25,8 @@ namespace Gateway.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(IndexModel indexModel)
         {
-            if (Request.Headers.Keys.Contains(CustomAuthorizationMiddleware.UserWord))
-                indexModel.Username = string.Join(string.Empty, Request.Headers[CustomAuthorizationMiddleware.UserWord]);
+            if (User.Identities.Any(i => i.IsAuthenticated))
+                indexModel.Username = User.Identities.First(i => i.IsAuthenticated).Name;
             if (!string.IsNullOrWhiteSpace(indexModel.Username))
             {
                 var authorsResponse = await gatewayController.GetSubscribedAuthors(indexModel.Username, indexModel.Page, indexModel.Size);
@@ -71,7 +71,7 @@ namespace Gateway.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> Add(AddModel addModel)
         {
-            var result = await gatewayController.AddSubscription(addModel.Username, addModel.Author);
+            var result = await gatewayController.AddSubscription(new Models.AddSubscriptionModel { Author = addModel.Author, Subscriber = addModel.Username });
             if (result.StatusCode == 200)
                 return RedirectToAction(nameof(Index), new IndexModel { Username = addModel.Username });
             else
