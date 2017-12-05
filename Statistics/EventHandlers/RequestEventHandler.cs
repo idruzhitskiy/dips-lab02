@@ -25,20 +25,13 @@ namespace Statistics.EventHandlers
         {
             var eventDescription = $"{@event.GetType().Name} { @event}";
             logger.LogInformation($"Processing {eventDescription}");
-            if (!@event.Host.EndsWith(".loc"))
+            dbContext.Accesses.Add(new Entities.AccessInfo
             {
-                logger.LogError($"Error processing {eventDescription}");
-            }
-            else
-            {
-                dbContext.Accesses.Add(new Entities.AccessInfo
-                {
-                    From = $"{@event.Origin}",
-                    To = $"{@event.Host}{@event.Route}",
-                    Time = @event.OccurenceTime
-                });
-                dbContext.SaveChanges();
-            }
+                From = $"{@event.Origin}",
+                To = $"{@event.Host}{@event.Route}",
+                Time = @event.OccurenceTime
+            });
+            dbContext.SaveChanges();
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Statistics
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            DbContextOptions options = null;
+            services.AddMvc();
             services.AddDbContext<ApplicationDbContext>(ops => ops.UseInMemoryDatabase("Statistics"));
             services.AddSingleton<IRabbitMQPersistentConnection, RabbitMQPersistentConnection>();
             services.AddSingleton<IEventBus, RabbitMQEventBus>();
@@ -47,6 +47,7 @@ namespace Statistics
                 app.UseDeveloperExceptionPage();
             }
             app.ApplicationServices.GetServices<IEventHandler>();
+            app.UseMvc();
         }
     }
 }
