@@ -22,6 +22,9 @@ using Gateway.CustomAuthorization;
 using Microsoft.EntityFrameworkCore;
 using Statistics.EventBus;
 using Gateway.Models;
+using Newtonsoft.Json.Serialization;
+using Statistics.Misc;
+using Statistics.EventHandlers;
 
 namespace Gateway
 {
@@ -41,6 +44,7 @@ namespace Gateway
             services.AddSingleton<IAccountsService, AccountsService>();
             services.AddSingleton<ISubscriptionsService, SubscriptionsService>();
             services.AddSingleton<INewsService, NewsService>();
+            services.AddSingleton<IStatisticsService, StatisticsService>();
             services.AddSingleton<GatewayController>();
 
             services.AddSingleton<TokensStore>();
@@ -62,13 +66,16 @@ namespace Gateway
                     .AllowAnyOrigin()
                     .AllowAnyHeader());
             });
-            services.AddMvc();
+            services.AddMvc().AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver()); ;
             services.AddSingleton<IEventBus, RabbitMQEventBus>();
+            services.AddSingleton<IEventStorage, EventStorage>();
+            services.AddSingleton<IEventHandler, AckEventHandler>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.ApplicationServices.GetServices<IEventHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

@@ -10,8 +10,11 @@ namespace Gateway.CustomAuthorization
 {
     public class GatewayCustomAuthorizationMiddleware : CustomAuthorizationMiddleware
     {
-        public GatewayCustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore, IEventBus eventBus) : base(next, tokensStore, eventBus)
+        private IEventBus eventBus;
+
+        public GatewayCustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore, IEventBus eventBus) : base(next, tokensStore)
         {
+            this.eventBus = eventBus;
         }
 
         public override async Task Invoke(HttpContext context)
@@ -21,9 +24,9 @@ namespace Gateway.CustomAuthorization
                 Host = context.Connection.LocalIpAddress.ToString() + ":" + context.Connection.LocalPort.ToString(),
                 Origin = context.Connection.RemoteIpAddress.ToString() + ":" + context.Connection.RemotePort.ToString(),
                 Route = context.Request.Path.ToString(),
-                Type = "Gateway",
+                RequestType = RequestType.Gateway,
                 OccurenceTime = DateTime.Now
-            });
+            }, true);
             if (context.Request.Headers.Keys.Contains(AuthorizationWord))
             {
                 await this._next(context);

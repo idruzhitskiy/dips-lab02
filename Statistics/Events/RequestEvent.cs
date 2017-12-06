@@ -10,11 +10,17 @@ namespace Statistics.Events
         public string Host { get; set; }
         public string Origin { get; set; }
         public string Route { get; set; }
-        public string Type { get; set; }
+        public RequestType RequestType { get; set; }
 
         public override string ToString()
         {
-            return $"Type: {Type}, Origin: {Origin}, Host: {Host}, Route: {Route}";
+            return $"Type: {RequestType}, Origin: {Origin}, Host: {Host}, Route: {Route}";
         }
+    }
+
+    public enum RequestType
+    {
+        Gateway,
+        Service
     }
 }

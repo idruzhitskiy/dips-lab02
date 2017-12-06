@@ -23,7 +23,30 @@ namespace Statistics.EventHandlers
 
         public async override Task Handle(LoginEvent @event)
         {
-            logger.LogWarning($"Processing {@event.GetType().Name} {@event}");
+            try
+            {
+                var eventDescription = $"{@event.GetType().Name} { @event}";
+                logger.LogInformation($"Processing {eventDescription}");
+                Entities.LoginInfo entity = new Entities.LoginInfo
+                {
+                    DateTime = @event.OccurenceTime,
+                    Username = @event.Name,
+                    From = @event.Origin,
+                    Id = @event.Id + @event.GetType().Name
+                };
+                if (dbContext.Logins.FirstOrDefault(r => r.Id == entity.Id) == null)
+                {
+                    dbContext.Logins.Add(entity);
+                    dbContext.SaveChanges();
+                }
+
+                eventBus.Publish(new AckEvent { AdjEventId = @event.Id, Status = AckStatus.Success });
+            }
+            catch (Exception e)
+            {
+                eventBus.Publish(new AckEvent { AdjEventId = @event.Id, Description = e.ToString(), Status = AckStatus.Failed });
+                logger.LogCritical(e.ToString());
+            }
         }
     }
 }

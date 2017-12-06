@@ -14,13 +14,13 @@ namespace Statistics.EventHandlers
         where T : Event
     {
         protected ApplicationDbContext dbContext;
-        private IEventBus eventBus;
+        protected IEventBus eventBus;
 
         public EventHandler(IEventBus eventBus, DbProxy dbProxy)
         {
             this.eventBus = eventBus;
             eventBus.Subscribe(this);
-            this.dbContext = dbProxy.DbContext;
+            this.dbContext = dbProxy?.DbContext;
         }
 
         public void Dispose()

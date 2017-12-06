@@ -1,0 +1,20 @@
+﻿@{
+    ViewData["Title"] = "News addition statistics";
+}
+<dx-pie-chart>
+    <datasource load-action="NewsAddedValue" />
+    <series argument-field="Author" value-field="Count">
+        <label visible="true" position="PieChartLabelPosition.Outside" background-color="transparent" />
+    </series>
+
+    <title text="News added"></title>
+    <legend vertical-alignment="Bottom" horizontal-alignment="Center" />
+    <tooltip enabled="true" />
+</dx-pie-chart>
+<dx-data-grid>
+    <datasource load-action="NewsAddedDetail" />
+    <column datafield="Author" caption="Author">
+    </column>
+    <column datafield="Time" caption="Added on">
+    </column>
+</dx-data-grid>

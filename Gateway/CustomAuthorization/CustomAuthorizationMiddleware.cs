@@ -21,13 +21,11 @@ namespace Gateway.CustomAuthorization
         public static string RoleWord = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
         protected readonly RequestDelegate _next;
         protected readonly TokensStore tokensStore;
-        protected readonly IEventBus eventBus;
 
-        public CustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore, IEventBus eventBus)
+        public CustomAuthorizationMiddleware(RequestDelegate next, TokensStore tokensStore)
         {
             _next = next;
             this.tokensStore = tokensStore;
-            this.eventBus = eventBus;
         }
 
         public virtual async Task Invoke(HttpContext context)

@@ -9,7 +9,7 @@ namespace Statistics.EventBus
 {
     public interface IEventBus
     {
-        void Publish(Event @event);
+        void Publish(Event @event, bool ack = false);
         void Subscribe<T>(EventHandlers.EventHandler<T> eventHandler) where T : Event;
         void Unsubscribe<T>(EventHandlers.EventHandler<T> eventHandler) where T : Event;
     }

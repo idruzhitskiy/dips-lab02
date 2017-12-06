@@ -14,6 +14,7 @@ using Gateway.Services;
 using Gateway.CustomAuthorization;
 using Gateway;
 using Statistics.EventBus;
+using Statistics.Misc;
 
 namespace NewsStorage
 {
@@ -35,7 +36,6 @@ namespace NewsStorage
                 //options.UseSqlServer(Configuration.GetConnectionString("NewsConnection")));
                 options.UseInMemoryDatabase("News"));
             services.AddSingleton<TokensStore>();
-            services.AddSingleton<IEventBus, RabbitMQEventBus>();
             //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 

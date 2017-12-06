@@ -23,7 +23,27 @@ namespace Statistics.EventHandlers
 
         public async override Task Handle(AddNewsEvent @event)
         {
-            logger.LogWarning($"Processing {@event.GetType().Name} {@event}");
+            try
+            {
+                logger.LogInformation($"Processing {@event.GetType().Name} {@event}");
+                Entities.NewsAdditionInfo entity = new Entities.NewsAdditionInfo
+                {
+                    Id = @event.Id + @event.GetType().Name,
+                    AddedTime = @event.OccurenceTime,
+                    Author = @event.Author
+                };
+                if (dbContext.NewsAdditions.FirstOrDefault(r => r.Id == entity.Id) == null)
+                {
+                    dbContext.NewsAdditions.Add(entity);
+                    dbContext.SaveChanges();
+                }
+                eventBus.Publish(new AckEvent { AdjEventId = @event.Id, Status = AckStatus.Success });
+            }
+            catch (Exception e)
+            {
+                eventBus.Publish(new AckEvent { AdjEventId = @event.Id, Description = e.ToString(), Status = AckStatus.Failed });
+                logger.LogCritical(e.ToString());
+            }
         }
     }
 }

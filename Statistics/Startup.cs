@@ -13,6 +13,7 @@ using Statistics.RabbitMQHelpers;
 using Statistics.Events;
 using Statistics.EventHandlers;
 using Microsoft.EntityFrameworkCore;
+using Statistics.Misc;
 
 namespace Statistics
 {
@@ -29,8 +30,11 @@ namespace Statistics
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddDbContext<ApplicationDbContext>(ops => ops.UseInMemoryDatabase("Statistics"));
+            services.AddLogging(ops => ops.SetMinimumLevel(LogLevel.Critical));
+            services.AddDbContext<ApplicationDbContext>(ops => 
+                ops.UseInMemoryDatabase("Statistics"));
             services.AddSingleton<IRabbitMQPersistentConnection, RabbitMQPersistentConnection>();
+            services.AddSingleton<IEventStorage, EventStorage>();
             services.AddSingleton<IEventBus, RabbitMQEventBus>();
             services.AddSingleton<IEventHandler, AddNewsEventHandler>();
             services.AddSingleton<IEventHandler, AddUserEventHandler>();

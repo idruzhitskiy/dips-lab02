@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Gateway.CustomAuthorization;
 using Gateway;
 using Statistics.EventBus;
+using Statistics.Misc;
 
 namespace Authentication
 {
@@ -38,7 +39,6 @@ namespace Authentication
                 //options.UseSqlServer(Configuration.GetConnectionString("AuthConnection")));
                 options.UseInMemoryDatabase("Authentication"));
             services.AddSingleton<TokensStore>();
-            services.AddSingleton<IEventBus, RabbitMQEventBus>();
             //services.BuildServiceProvider().GetRequiredService<ApplicationDbContext>().Database.Migrate();
         }
 

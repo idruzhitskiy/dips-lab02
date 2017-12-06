@@ -16,6 +16,7 @@ using RabbitMQ.Client.Exceptions;
 using System.Net.Sockets;
 using Polly;
 using System.Threading;
+using Statistics.Misc;
 
 namespace Statistics.EventBus
 {
@@ -27,12 +28,12 @@ namespace Statistics.EventBus
         private List<Type> eventTypes = new List<Type>();
         private IRabbitMQPersistentConnection connection;
         private IModel consumerChannel;
+        private IEventStorage eventStorage;
         private ILogger<RabbitMQEventBus> logger;
         private int retryCount = 2;
         private RetryPolicy policy;
-        private List<string> alreadyProcessedIds = new List<string>();
 
-        public RabbitMQEventBus(IConfiguration configuration, ILogger<RabbitMQEventBus> logger)
+        public RabbitMQEventBus(IConfiguration configuration, ILogger<RabbitMQEventBus> logger, IEventStorage eventStorage)
         {
             this.connection = new RabbitMQPersistentConnection(configuration, logger);
             policy = Policy.Handle<BrokerUnreachableException>()
@@ -44,19 +45,39 @@ namespace Statistics.EventBus
                 });
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.consumerChannel = CreateConsumerChannel();
+            this.eventStorage = eventStorage;
         }
 
-        public void Publish(Event @event)
+        public void Publish(Event @event, bool ack = false)
         {
             new Thread(o =>
             {
                 try
                 {
-                    PublishInner(o as Event);
+                    @event = o as Event;
+
+                    if (ack)
+                    {
+                        int @try = 0;
+                        eventStorage.AddEvent(@event);
+                        while (@try < retryCount)
+                        {
+                            if ((@event = eventStorage.GetEvent(@event.Id)) != null)
+                                PublishInner(@event);
+                            else
+                                return;
+                            Thread.Sleep(5000);
+                        }
+                        logger.LogCritical($"Failed to publish event after {retryCount} tries");
+                    }
+                    else
+                    {
+                        PublishInner(@event);
+                    }
                 }
                 catch (Exception e)
                 {
-                    logger.LogError($"Failed to publish event, {e}");
+                    logger.LogCritical($"Failed to publish event, {e}");
                 }
             }).Start(@event);
         }
@@ -162,16 +183,14 @@ namespace Statistics.EventBus
                     try
                     {
                         string id = (@event as Event).Id;
-                        if (!alreadyProcessedIds.Contains(id))
                         {
                             var genericType = template.MakeGenericType(type);
                             await (Task)genericType.GetMethod("Handle").Invoke(handler, new object[] { @event });
-                            alreadyProcessedIds.Add(id);
                         }
                     }
                     catch (Exception e)
                     {
-                        logger.LogError($"Exception while trying to execute event handler: {e}");
+                        logger.LogCritical($"Exception while trying to execute event handler: {e}");
                     }
                 }
             }

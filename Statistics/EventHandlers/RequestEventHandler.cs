@@ -23,15 +23,30 @@ namespace Statistics.EventHandlers
 
         public async override Task Handle(RequestEvent @event)
         {
-            var eventDescription = $"{@event.GetType().Name} { @event}";
-            logger.LogInformation($"Processing {eventDescription}");
-            dbContext.Accesses.Add(new Entities.AccessInfo
+            try
             {
-                From = $"{@event.Origin}",
-                To = $"{@event.Host}{@event.Route}",
-                Time = @event.OccurenceTime
-            });
-            dbContext.SaveChanges();
+                var eventDescription = $"{@event.GetType().Name} { @event}";
+                logger.LogInformation($"Processing {eventDescription}");
+                Entities.RequestInfo entity = new Entities.RequestInfo
+                {
+                    From = $"{@event.Origin}",
+                    To = $"{@event.Host}{@event.Route}",
+                    Time = @event.OccurenceTime,
+                    RequestType = @event.RequestType,
+                    Id = @event.Id + @event.GetType().Name
+                };
+                if (dbContext.Requests.FirstOrDefault(r => r.Id == entity.Id) == null)
+                {
+                    dbContext.Requests.Add(entity);
+                    dbContext.SaveChanges();
+                }
+                eventBus.Publish(new AckEvent { AdjEventId = @event.Id, Status = AckStatus.Success });
+            }
+            catch (Exception e)
+            {
+                eventBus.Publish(new AckEvent { AdjEventId = @event.Id, Description = e.ToString(), Status = AckStatus.Failed });
+                logger.LogCritical(e.ToString());
+            }
         }
     }
 }

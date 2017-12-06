@@ -11,8 +11,10 @@ namespace Statistics
 {
     public class ApplicationDbContext : DbContext
     {
-        public DbSet<AccessInfo> Accesses { get; set; }
+        public DbSet<RequestInfo> Requests { get; set; }
         public DbSet<LoginInfo> Logins { get; set; }
+        public DbSet<NewsAdditionInfo> NewsAdditions { get; set; }
+        public DbSet<UserOperationInfo> UserOperations { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {

@@ -13,9 +13,14 @@
 <html>
 <head>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.6/jquery.validate.unobtrusive.js"></script>
+    <link href="~/lib/devextreme/css/dx.common.css" rel="stylesheet" />
+    <link href="~/lib/devextreme/css/dx.light.css" rel="stylesheet" />
+    <script src="~/lib/devextreme/js/dx.all.js"></script>
+    <script src="~/lib/devextreme-aspnet-data/js/dx.aspnet.data.js"></script>
+    <script src="~/lib/devextreme/js/dx.aspnet.mvc.js"></script>
 </head>
 <body>
     <div class="navbar navbar-inverse navbar-static-top">
@@ -28,11 +33,14 @@
                 <ul class="nav navbar-nav navbar-right">
                     @if (User.Identities.Any(i => i.IsAuthenticated))
                     {
-                        <li class="navbar-text">Logged in as @User.Identities.First(i => i.IsAuthenticated).Name</li>
                         @if (User.IsInRole("Admin"))
                         {
-                            <li class="navbar-text text-capitalize text-danger">admin</li>
+                            <li><a asp-controller="Admin" asp-action="RequestsStatistic">Requests statistic</a></li>
+                            <li><a asp-controller="Admin" asp-action="NewsAddedStatistics">News addition statistic</a></li>
+                            <li><a asp-controller="Admin" asp-action="OperationsStatistics">Operations statistic</a></li>
                         }
+
+                        <li class="navbar-text">Logged in as @User.Identities.First(i => i.IsAuthenticated).Name</li>
                         <li><a asp-controller="Users" asp-action="Index">Control panel</a></li>
                         <li><a asp-controller="Users" asp-action="Logout">Logout</a></li>
                     }
