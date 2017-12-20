@@ -26,7 +26,7 @@ namespace Statistics.EventHandlers
                 logger.LogInformation($"Processing {eventDescription}");
                 Entities.UserOperationInfo entity = new Entities.UserOperationInfo
                 {
-                    Operation = Entities.Operation.Delete,
+                    Operation = Entities.UserOperation.Delete,
                     Subject = @event.Username,
                     Time = @event.OccurenceTime,
                     Id = @event.Id + @event.GetType().Name

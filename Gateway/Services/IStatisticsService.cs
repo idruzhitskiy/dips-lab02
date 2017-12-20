@@ -12,6 +12,7 @@ namespace Gateway.Services
         Task<List<NewsAdditionDetailModel>> GetNewsAdditionsDetailed();
         Task<List<RequestModel>> GetRequests();
         Task<List<RequestDetailModel>> GetRequestsDetailed();
+        Task<List<OperationModel>> GetOperations();
         Task<List<OperationDetailModel>> GetOperationsDetailed();
     }
 }

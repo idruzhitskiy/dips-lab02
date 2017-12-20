@@ -31,7 +31,7 @@ namespace Statistics
         {
             services.AddMvc();
             services.AddLogging(ops => ops.SetMinimumLevel(LogLevel.Critical));
-            services.AddDbContext<ApplicationDbContext>(ops => 
+            services.AddDbContext<ApplicationDbContext>(ops =>
                 ops.UseInMemoryDatabase("Statistics"));
             services.AddSingleton<IRabbitMQPersistentConnection, RabbitMQPersistentConnection>();
             services.AddSingleton<IEventStorage, EventStorage>();
@@ -40,6 +40,10 @@ namespace Statistics
             services.AddSingleton<IEventHandler, AddUserEventHandler>();
             services.AddSingleton<IEventHandler, LoginEventHandler>();
             services.AddSingleton<IEventHandler, RequestEventHandler>();
+            services.AddSingleton<IEventHandler, ChangeUsernameEventHandler>();
+            services.AddSingleton<IEventHandler, DeleteUserEventHandler>();
+            services.AddSingleton<IEventHandler, AddSubscriptionEventHandler>();
+            services.AddSingleton<IEventHandler, RemoveSubscriptionEventHandler>();
             services.AddTransient<DbProxy>();
         }
 

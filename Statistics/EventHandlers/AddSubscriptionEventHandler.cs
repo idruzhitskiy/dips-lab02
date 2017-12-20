@@ -1,42 +1,39 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Statistics.EventBus;
-using Statistics.Events;
+﻿using Statistics.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Statistics.EventBus;
+using Microsoft.Extensions.Logging;
 
 namespace Statistics.EventHandlers
 {
-    public class AddUserEventHandler : EventHandler<AddUserEvent>
+    public class AddSubscriptionEventHandler : EventHandler<AddSubscriptionEvent>
     {
-        private ILogger<AddUserEventHandler> logger;
+        private ILogger<AddSubscriptionEventHandler> logger;
 
-        public AddUserEventHandler(IEventBus eventBus,
-            DbProxy proxy,
-            ILogger<AddUserEventHandler> logger)
-            : base(eventBus, proxy)
+        public AddSubscriptionEventHandler(IEventBus eventBus, DbProxy dbProxy, ILogger<AddSubscriptionEventHandler> logger) : base(eventBus, dbProxy)
         {
             this.logger = logger;
         }
 
-        public async override Task Handle(AddUserEvent @event)
+        public override async Task Handle(AddSubscriptionEvent @event)
         {
             try
             {
                 var eventDescription = $"{@event.GetType().Name} { @event}";
                 logger.LogInformation($"Processing {eventDescription}");
-                Entities.UserOperationInfo entity = new Entities.UserOperationInfo
+                Entities.SubscriptionOperationInfo entity = new Entities.SubscriptionOperationInfo
                 {
-                    Operation = Entities.UserOperation.Register,
-                    Subject = @event.Username,
+                    Operation = Entities.SubscriptionOperation.Added,
+                    Author = @event.Author,
+                    Subscriber = @event.Subscriber,
                     Time = @event.OccurenceTime,
                     Id = @event.Id + @event.GetType().Name
                 };
                 if (dbContext.UserOperations.FirstOrDefault(r => r.Id == entity.Id) == null)
                 {
-                    dbContext.UserOperations.Add(entity);
+                    dbContext.SubscriptionOperations.Add(entity);
                     dbContext.SaveChanges();
                 }
                 eventBus.Publish(new AckEvent { AdjEventId = @event.Id, Status = AckStatus.Success });

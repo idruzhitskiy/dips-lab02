@@ -15,6 +15,7 @@ namespace Statistics
         public DbSet<LoginInfo> Logins { get; set; }
         public DbSet<NewsAdditionInfo> NewsAdditions { get; set; }
         public DbSet<UserOperationInfo> UserOperations { get; set; }
+        public DbSet<SubscriptionOperationInfo> SubscriptionOperations { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {

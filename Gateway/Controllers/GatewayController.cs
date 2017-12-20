@@ -114,7 +114,10 @@ namespace Gateway.Controllers
                 var resultAccounts = (await accountsService.Register(accountsServerResult))?.IsSuccessStatusCode == true;
                 return StatusCode(503, $"Subscriptions service unavailable, rollback status: Acc - { (resultAccounts ? "ok" : "failed")}, News - {(resultNews ? "ok" : "failed")}");
             }
-
+            eventBus.Publish(new DeleteUserEvent
+            {
+                Username = username
+            });
             return Ok("");
         }
 
@@ -154,6 +157,11 @@ namespace Gateway.Controllers
                                     await subscriptionsService.ChangeUserName(newUsername, username);
                                 return false;
                             }
+                            eventBus.Publish(new ChangeUsernameEvent
+                            {
+                                OldUsername = username,
+                                NewUsername = newUsername
+                            });
                             return true;
                         }
                         catch { }
@@ -175,7 +183,14 @@ namespace Gateway.Controllers
                 message += $"SS operation status: {subscriptionsResult.StatusCode}, {subscriptionsResult.Content.ReadAsStringAsync().Result};";
 
             if (string.IsNullOrWhiteSpace(message))
+            {
+                eventBus.Publish(new ChangeUsernameEvent
+                {
+                    OldUsername = username,
+                    NewUsername = newUsername
+                });
                 return Ok("");
+            }
             return StatusCode(500, message);
         }
 
@@ -310,7 +325,14 @@ namespace Gateway.Controllers
             {
                 logger.LogInformation($"Attempt to add subscription {addSubscriptionModel.Subscriber}-{addSubscriptionModel.Author}, response {response.StatusCode}");
                 if (response.IsSuccessStatusCode)
+                {
+                    eventBus.Publish(new AddSubscriptionEvent
+                    {
+                        Author = addSubscriptionModel.Author,
+                        Subscriber = addSubscriptionModel.Subscriber
+                    });
                     return Ok("");
+                }
                 else
                     return StatusCode(500, response.Content?.ReadAsStringAsync()?.Result);
             }
@@ -342,7 +364,14 @@ namespace Gateway.Controllers
                 logger.LogInformation($"Attempt to remove subscription {subscriber}-{author}, response {response.StatusCode}");
 
                 if (response.IsSuccessStatusCode)
+                {
+                    eventBus.Publish(new RemoveSubscriptionEvent
+                    {
+                        Author = author,
+                        Subscriber = subscriber
+                    });
                     return Ok("");
+                }
                 else
                     return StatusCode(500, response.Content?.ReadAsStringAsync()?.Result);
             }
@@ -367,8 +396,8 @@ namespace Gateway.Controllers
                 {
                     eventBus.Publish(new LoginEvent
                     {
-                        Name = userModel.Username,
-                        Origin = Request.Host.ToString() ?? "unknown"
+                        Name = userModel?.Username,
+                        Origin = Request?.Host.ToString() ?? "unknown"
                     });
                     res = Ok(await result.Content.ReadAsStringAsync());
                 }

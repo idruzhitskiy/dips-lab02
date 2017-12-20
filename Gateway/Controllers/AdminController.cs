@@ -67,5 +67,11 @@ namespace Gateway.Controllers
         {
             return await statisticsService.GetOperationsDetailed();
         }
+
+        [HttpGet("operations/value")]
+        public async Task<List<OperationModel>> OperationsValue()
+        {
+            return await statisticsService.GetOperations();
+        }
     }
 }

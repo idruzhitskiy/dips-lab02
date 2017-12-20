@@ -79,7 +79,17 @@ namespace Statistics.Controllers
         [HttpGet("operations/detail")]
         public async Task<List<OperationDetailModel>> GetOperationsDetailed()
         {
-            return dbContext.UserOperations.Select(i => new OperationDetailModel { Operation = Enum.GetName(typeof(Operation), i.Operation), Subject = i.Subject, Time = i.Time }).ToList();
+            return dbContext.UserOperations.Select(i => new OperationDetailModel { Operation = Enum.GetName(typeof(UserOperation), i.Operation), Subject = i.Subject, Time = i.Time }).ToList();
+        }
+
+        [HttpGet("operations")]
+        public async Task<List<OperationModel>> GetOperations()
+        {
+            return dbContext.UserOperations.GroupBy(i => i.Operation).Select(g => new OperationModel
+            {
+                Type = Enum.GetName(typeof(UserOperation), g.Key),
+                Count = g.Count()
+            }).ToList();
         }
     }
 }

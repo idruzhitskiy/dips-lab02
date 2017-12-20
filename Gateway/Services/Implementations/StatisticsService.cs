@@ -28,6 +28,14 @@ namespace Gateway.Services.Implementations
             return null;
         }
 
+        public async Task<List<OperationModel>> GetOperations()
+        {
+            var res = await Get("operations");
+            if (res.IsSuccessStatusCode)
+                return JsonConvert.DeserializeObject<List<OperationModel>>(res.Content.ReadAsStringAsync().Result);
+            return null;
+        }
+
         public async Task<List<OperationDetailModel>> GetOperationsDetailed()
         {
             var res = await Get("operations/detail");

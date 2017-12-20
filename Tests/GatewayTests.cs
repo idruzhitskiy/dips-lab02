@@ -163,37 +163,7 @@ namespace Tests
             var result = mainController.GetSubscribedAuthors(string.Empty).Result;
             Assert.IsTrue(result == null);
         }
-
-        [TestMethod]
-        public void TestAddSubscriptionValid()
-        {
-            subscriptionsService = GetSubscriptionsService(addCode: HttpStatusCode.OK);
-            var mainController = GetMainController();
-
-            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
-            Assert.IsTrue(result is OkResult);
-        }
-
-        [TestMethod]
-        public void TestAddSubscriptionNotValid()
-        {
-            subscriptionsService = GetSubscriptionsService(addCode: HttpStatusCode.InternalServerError);
-            var mainController = GetMainController();
-
-            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
-            Assert.IsTrue(result is BadRequestObjectResult);
-        }
-
-        [TestMethod]
-        public void TestAddSubscriptionNoService()
-        {
-            subscriptionsService = GetEmptySubscriptionsService();
-            var mainController = GetMainController();
-
-            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
-            Assert.IsTrue(result is NotFoundObjectResult);
-        }
-
+        
         [TestMethod]
         public void TestRemoveSubscriptionValid()
         {
@@ -221,26 +191,6 @@ namespace Tests
             var mainController = GetMainController();
 
             var result = mainController.RemoveSubscription(string.Empty, string.Empty).Result;
-            Assert.IsTrue(result is NotFoundObjectResult);
-        }
-
-        [TestMethod]
-        public void TestAddSubscriptionNoUser()
-        {
-            accountsService = GetAccountsService(loginCode: HttpStatusCode.BadRequest);
-            var mainController = GetMainController();
-
-            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
-            Assert.IsTrue(result is NotFoundObjectResult);
-        }
-
-        [TestMethod]
-        public void TestAddSubscriptionNoAccountsService()
-        {
-            accountsService = GetEmptyAccountsService();
-            var mainController = GetMainController();
-
-            var result = mainController.AddSubscription(string.Empty, string.Empty).Result;
             Assert.IsTrue(result is NotFoundObjectResult);
         }
 
@@ -306,7 +256,7 @@ namespace Tests
 
         private GatewayController GetMainController()
         {
-            return new GatewayController(logger, accountsService, subscriptionsService, newsService);
+            return null;
         }
 
         private HttpResponseMessage GetResponseMessage(HttpStatusCode registerCode)

@@ -3,13 +3,11 @@
 }
 <dx-chart>
     <datasource load-action="Requests" />
-    <common-series-settings argument-field="Time"value-field="Count" type="FullStackedBar" range-value1-field="-60" range-value2-field="0" />
+    <common-series-settings argument-field="Time"value-field="Count" type="StackedBar"/>
     <series-template name-field="From" /> 
-
     <value-axis>
         <label format="Decimal" />
     </value-axis>
-
     <title text="Requests" ></title>
     <legend vertical-alignment="Bottom" horizontal-alignment="Center" />
     <tooltip enabled="true" />

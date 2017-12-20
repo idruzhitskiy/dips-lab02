@@ -31,7 +31,6 @@ namespace Statistics.EventHandlers
                     logger.LogInformation($"Event {@event.AdjEventId} successfull");
                     break;
                 case AckStatus.Failed:
-                    eventStorage.RemoveEvent(@event.AdjEventId);
                     logger.LogError($"Error acknowledging event {@event.AdjEventId}, exception: {@event.Description}");
                     break;
             }

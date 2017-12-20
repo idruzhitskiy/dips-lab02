@@ -9,11 +9,11 @@ namespace Statistics.Entities
     {
         public string Id { get; set; }
         public string Subject { get; set; }
-        public Operation Operation { get; set; }
+        public UserOperation Operation { get; set; }
         public DateTime Time { get; set; }
     }
 
-    public enum Operation
+    public enum UserOperation
     {
         Register,
         Delete,
